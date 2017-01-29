@@ -12,6 +12,8 @@ COVFLAGS = --coverage -O0 -g $(CFLAGS)
 LFLAGS = -lmxml -pthread -ldl -lm -lcrypto `pkg-config --libs glib-2.0` -lsqlite3
 TESTFLAGS = -lcmocka $(LFLAGS)
 
+all: libomemo-lurch
+
 $(BDIR):
 	mkdir -p $@
 	
@@ -20,8 +22,8 @@ libomemo: $(SDIR)/libomemo.c libomemo_crypto libomemo_storage $(BDIR)
 	libtool --mode=link gcc -o $(BDIR)/$@.la $(BDIR)/$@.lo $(BDIR)/$@_crypto.lo $(BDIR)/$@_storage.lo
 	
 libomemo-lurch: $(SDIR)/libomemo.c libomemo_crypto libomemo_storage $(BDIR) 
-libtool --mode=compile gcc -c $(SDIR)/libomemo.c $(CFLAGS_LURCH) -o $(BDIR)/$@.lo
-libtool --mode=link gcc -o $(BDIR)/libomemo.la $(BDIR)/libomemo.lo $(BDIR)/libomemo_crypto.lo $(BDIR)/libomemo_storage.lo
+	libtool --mode=compile gcc -c $(SDIR)/libomemo.c $(CFLAGS_LURCH) -o $(BDIR)/$@.lo
+	libtool --mode=link gcc -o $(BDIR)/libomemo.la $(BDIR)/libomemo.lo $(BDIR)/libomemo_crypto.lo $(BDIR)/libomemo_storage.lo
 
 libomemo_crypto: $(SDIR)/libomemo_crypto.c build
 	libtool --mode=compile gcc -c $(SDIR)/$@.c $(CFLAGS) -o $(BDIR)/$@.lo
