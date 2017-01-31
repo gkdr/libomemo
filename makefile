@@ -7,13 +7,12 @@ LDIR = lib
 # -fno-builtin-memset is enough to make gcc not optimize it away
 FILES =
 CFLAGS =-std=c11 -Wall -Wextra -Wpedantic -Wstrict-overflow -fno-strict-aliasing -funsigned-char -D_XOPEN_SOURCE=700 -D_BSD_SOURCE -fno-builtin-memset `pkg-config --cflags glib-2.0`
-CFLAGS_LURCH=$(CFLAGS) -DOMEMO_XMLNS='"lurch"'
 CFLAGS_CONVERSATIONS=$(CFLAGS) -DOMEMO_XMLNS='"eu.siacs.conversations.axolotl"' -DOMEMO_NS_SEPARATOR='"."' -DOMEMO_NS_NOVERSION
 COVFLAGS = --coverage -O0 -g $(CFLAGS)
 LFLAGS = -lmxml -pthread -ldl -lm -lcrypto `pkg-config --libs glib-2.0` -lsqlite3
 TESTFLAGS = -lcmocka $(LFLAGS)
 
-all: libomemo-lurch
+all: libomemo-conversations
 
 $(BDIR):
 	mkdir -p $@
