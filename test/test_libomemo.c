@@ -690,7 +690,6 @@ void test_message_prepare_encryption(void ** state) {
   assert_string_equal(mxmlElementGetAttr(msg_p->message_node_p, "xmlns"), "jabber:client");
   assert_string_equal(mxmlElementGetAttr(msg_p->message_node_p, "type"), "chat");
   assert_string_equal(mxmlElementGetAttr(msg_p->message_node_p, "to"), "bob@example.com");
-  assert_ptr_equal(mxmlGetFirstChild(msg_p->message_node_p), (void *) 0);
 
   assert_string_equal(mxmlGetElement(msg_p->header_node_p), "header");
   assert_string_equal(mxmlElementGetAttr(msg_p->header_node_p, "sid"), "1337");
@@ -850,8 +849,11 @@ void test_message_export_encrypted(void ** state) {
   assert_ptr_not_equal(message_node_p, (void *) 0);
   assert_string_equal(mxmlGetElement(message_node_p), "message");
 
+  mxml_node_t * body_node_p;
+  assert_int_equal(expect_next_node(message_node_p, mxmlGetFirstChild, "body", &body_node_p), 0);
+
   mxml_node_t * encrypted_node_p;
-  assert_int_equal(expect_next_node(message_node_p, mxmlGetFirstChild, "encrypted", &encrypted_node_p), 0);
+  assert_int_equal(expect_next_node(body_node_p, mxmlGetNextSibling, "encrypted", &encrypted_node_p), 0);
   assert_string_equal(mxmlElementGetAttr(encrypted_node_p, "xmlns"), "urn:xmpp:omemo:0");
 
   mxml_node_t * header_node_p;
@@ -883,6 +885,8 @@ void test_message_export_encrypted_extra(void ** state) {
   char * xml;
   assert_int_equal(omemo_message_export_encrypted(msg_p, &xml), 0);
 
+  printf("%s\n", xml);
+
   mxml_node_t * message_node_p = mxmlLoadString((void *) 0, xml, MXML_OPAQUE_CALLBACK);
   assert_ptr_not_equal(message_node_p, (void *) 0);
   assert_string_equal(mxmlGetElement(message_node_p), "message");
@@ -890,8 +894,11 @@ void test_message_export_encrypted_extra(void ** state) {
   mxml_node_t * active_node_p;
   assert_int_equal(expect_next_node(message_node_p, mxmlGetFirstChild, "active", &active_node_p), 0);
 
+  mxml_node_t * body_node_p;
+  assert_int_equal(expect_next_node(active_node_p, mxmlGetNextSibling, "body", &body_node_p), 0);
+
   mxml_node_t * encrypted_node_p;
-  assert_int_equal(expect_next_node(active_node_p, mxmlGetNextSibling, "encrypted", &encrypted_node_p), 0);
+  assert_int_equal(expect_next_node(body_node_p, mxmlGetNextSibling, "encrypted", &encrypted_node_p), 0);
   assert_string_equal(mxmlElementGetAttr(encrypted_node_p, "xmlns"), "urn:xmpp:omemo:0");
 
   mxml_node_t * header_node_p;
@@ -932,7 +939,6 @@ void test_message_encrypt_decrypt(void ** state) {
 
   assert_ptr_not_equal(msg_in_p->header_node_p, (void *) 0);
   assert_string_equal(mxmlGetElement(msg_in_p->message_node_p), "message");
-  assert_ptr_equal(mxmlGetFirstChild(msg_in_p->message_node_p), (void *) 0);
 
   assert_ptr_not_equal(msg_in_p->header_node_p, (void *) 0);
   assert_string_equal(mxmlGetElement(msg_in_p->header_node_p), "header");
@@ -952,10 +958,10 @@ void test_message_encrypt_decrypt(void ** state) {
 
   char * xml_in;
   assert_int_equal(omemo_message_export_decrypted(msg_in_p, key_retrieved_p, key_retrieved_len, &crypto, &xml_in), 0);
-  mxml_node_t * message_node_decrypted_p = mxmlLoadString((void *) 0, xml_in, MXML_NO_CALLBACK);
+  mxml_node_t * message_node_decrypted_p = mxmlLoadString((void *) 0, xml_in, MXML_OPAQUE_CALLBACK);
   assert_ptr_not_equal(message_node_decrypted_p, (void *) 0);
   mxml_node_t * body_text_node_p = mxmlFindPath(message_node_decrypted_p, "body");
-  assert_string_equal(mxmlGetText(body_text_node_p, 0), "hello");
+  assert_string_equal(mxmlGetOpaque(body_text_node_p), "hello");
 
   omemo_message_destroy(msg_out_p);
   omemo_message_destroy(msg_in_p);
@@ -1007,10 +1013,10 @@ void test_message_encrypt_decrypt_extra(void ** state) {
 
   char * xml_in;
   assert_int_equal(omemo_message_export_decrypted(msg_in_p, key_retrieved_p, key_retrieved_len, &crypto, &xml_in), 0);
-  mxml_node_t * message_node_decrypted_p = mxmlLoadString((void *) 0, xml_in, MXML_NO_CALLBACK);
+  mxml_node_t * message_node_decrypted_p = mxmlLoadString((void *) 0, xml_in, MXML_OPAQUE_CALLBACK);
   assert_ptr_not_equal(message_node_decrypted_p, (void *) 0);
   mxml_node_t * body_text_node_p = mxmlFindPath(message_node_decrypted_p, "body");
-  assert_string_equal(mxmlGetText(body_text_node_p, 0), "hello");
+  assert_string_equal(mxmlGetOpaque(body_text_node_p), "hello");
 
   omemo_message_destroy(msg_out_p);
   omemo_message_destroy(msg_in_p);

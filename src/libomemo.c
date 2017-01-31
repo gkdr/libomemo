@@ -69,6 +69,8 @@
 
 #define OMEMO_DB_DEFAULT_FN "omemo.sqlite"
 
+#define NO_OMEMO_MSG "You received an OMEMO encrypted message, but your client does not support it."
+
 struct omemo_bundle {
   char * device_id;
   mxml_node_t * signed_pk_node_p;
@@ -1055,7 +1057,11 @@ int omemo_message_prepare_encryption(char * outgoing_message, uint32_t sender_de
   if (ret_val) {
     goto cleanup;
   }
-  mxmlRemove(body_node_p);
+
+  ret_val = mxmlSetOpaque(body_node_p, NO_OMEMO_MSG);
+  if (ret_val) {
+    goto cleanup;
+  }
 
   payload_p = malloc(sizeof(uint8_t) * (ct_len + OMEMO_AES_GCM_TAG_LENGTH));
   if (!payload_p) {
@@ -1149,6 +1155,7 @@ int omemo_message_prepare_decryption(char * incoming_message, omemo_message ** m
 
   int ret_val = 0;
   mxml_node_t * message_node_p = (void *) 0;
+  mxml_node_t * body_node_p = (void *) 0;
   mxml_node_t * store_node_p = (void *) 0;
   mxml_node_t * encrypted_node_p = (void *) 0;
   mxml_node_t * header_node_p = (void *) 0;
@@ -1159,6 +1166,14 @@ int omemo_message_prepare_decryption(char * incoming_message, omemo_message ** m
   if (!message_node_p) {
     ret_val = OMEMO_ERR_MALFORMED_XML;
     goto cleanup;
+  }
+
+  body_node_p = mxmlFindPath(message_node_p, BODY_NODE_NAME);
+  if (body_node_p) {
+    ret_val = expect_next_node(body_node_p, mxmlGetParent, BODY_NODE_NAME, &body_node_p);
+    if (ret_val) {
+      goto cleanup;
+    }
   }
 
   store_node_p = mxmlFindPath(message_node_p, STORE_NODE_NAME);
@@ -1183,6 +1198,10 @@ int omemo_message_prepare_decryption(char * incoming_message, omemo_message ** m
     goto cleanup;
   }
   memset(msg_p, 0, sizeof(omemo_message));
+
+  if (body_node_p) {
+    mxmlDelete(body_node_p);
+  }
 
   if (store_node_p) {
     mxmlDelete(store_node_p);
