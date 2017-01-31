@@ -16,14 +16,25 @@
 #define OMEMO_XMLNS "urn:xmpp:omemo"
 #endif
 
+#ifndef OMEMO_NS_SEPARATOR
+#define OMEMO_NS_SEPARATOR ":"
+#endif
+
+#define OMEMO_NS_SEPARATOR_FINAL ":"
+
 #define OMEMO_VERSION "0"
+
+#ifdef OMEMO_NS_NOVERSION
+#define OMEMO_NS OMEMO_XMLNS
+#else
 #define OMEMO_NS OMEMO_XMLNS ":" OMEMO_VERSION
+#endif
 
 #define PEP_NODE_NAME "node"
 #define DEVICELIST_PEP_NAME "devicelist"
 #define BUNDLE_PEP_NAME "bundles"
 
-#define OMEMO_DEVICELIST_PEP_NODE OMEMO_NS ":" DEVICELIST_PEP_NAME
+#define OMEMO_DEVICELIST_PEP_NODE OMEMO_NS OMEMO_NS_SEPARATOR DEVICELIST_PEP_NAME
 
 #define MESSAGE_NODE_NAME "message"
 #define BODY_NODE_NAME "body"
@@ -407,7 +418,7 @@ int omemo_bundle_export(omemo_bundle * bundle_p, char ** publish) {
   int ret_val = 0;
 
   char * node_value = (void *) 0;
-  char * format = "%s:%s:%s";
+  const char * format = "%s%s%s%s%s";
   size_t len = 0;
   mxml_node_t * publish_node_p = (void *) 0;
   mxml_node_t * item_node_p = (void *) 0;
@@ -427,9 +438,9 @@ int omemo_bundle_export(omemo_bundle * bundle_p, char ** publish) {
     //FIXME: numbers into constants
   }
 
-  len = snprintf((void *) 0, 0, format, OMEMO_NS, BUNDLE_PEP_NAME, bundle_p->device_id) + 1;
+  len = snprintf((void *) 0, 0, format, OMEMO_NS, OMEMO_NS_SEPARATOR, BUNDLE_PEP_NAME, OMEMO_NS_SEPARATOR_FINAL, bundle_p->device_id) + 1;
   node_value = malloc(len);
-  if (snprintf(node_value, len, format, OMEMO_NS, BUNDLE_PEP_NAME, bundle_p->device_id) <= 0) {
+  if (snprintf(node_value, len, format, OMEMO_NS, OMEMO_NS_SEPARATOR, BUNDLE_PEP_NAME, OMEMO_NS_SEPARATOR_FINAL, bundle_p->device_id) <= 0) {
     ret_val = -4;
     goto cleanup;
   }
@@ -579,8 +590,8 @@ cleanup:
 }
 
 int omemo_bundle_get_pep_node_name(uint32_t device_id, char ** node_name_p) {
-  char * format = "%s:%s:%i";
-  size_t len = snprintf((void *) 0, 0, format, OMEMO_NS, BUNDLE_PEP_NAME, device_id);
+  char * format = "%s%s%s%s%i";
+  size_t len = snprintf((void *) 0, 0, format, OMEMO_NS, OMEMO_NS_SEPARATOR, BUNDLE_PEP_NAME, OMEMO_NS_SEPARATOR_FINAL, device_id);
   size_t buf_len = len + 1;
 
   char * node_name = malloc(buf_len);
@@ -588,7 +599,7 @@ int omemo_bundle_get_pep_node_name(uint32_t device_id, char ** node_name_p) {
     return -1;
   }
 
-  size_t actual_len = snprintf(node_name, buf_len, format, OMEMO_NS, BUNDLE_PEP_NAME, device_id);
+  size_t actual_len = snprintf(node_name, buf_len, format, OMEMO_NS, OMEMO_NS_SEPARATOR, BUNDLE_PEP_NAME, OMEMO_NS_SEPARATOR_FINAL, device_id);
   if (actual_len != len) {
     free(node_name);
     return -2;
@@ -897,8 +908,8 @@ const char * omemo_devicelist_get_owner(const omemo_devicelist * dl_p) {
 }
 
 int omemo_devicelist_get_pep_node_name(char ** node_name_p) {
-  char * format = "%s:%s";
-  size_t len = snprintf((void *) 0, 0, format, OMEMO_NS, DEVICELIST_PEP_NAME);
+  char * format = "%s%s%s";
+  size_t len = snprintf((void *) 0, 0, format, OMEMO_NS, OMEMO_NS_SEPARATOR, DEVICELIST_PEP_NAME);
   size_t buf_len = len + 1;
 
   char * node_name = malloc(buf_len);
@@ -906,7 +917,7 @@ int omemo_devicelist_get_pep_node_name(char ** node_name_p) {
     return -1;
   }
 
-  size_t actual_len = snprintf(node_name, buf_len, format, OMEMO_NS, DEVICELIST_PEP_NAME);
+  size_t actual_len = snprintf(node_name, buf_len, format, OMEMO_NS, OMEMO_NS_SEPARATOR, DEVICELIST_PEP_NAME);
   if (actual_len != len) {
     free(node_name);
     return -2;
@@ -1029,7 +1040,7 @@ int omemo_message_prepare_encryption(char * outgoing_message, uint32_t sender_de
     goto cleanup;
   }
 
-  ret_val = crypto_p->aes_gcm_encrypt_func((uint8_t *) msg_text, strlen(msg_text) + 1,
+  ret_val = crypto_p->aes_gcm_encrypt_func((uint8_t *) msg_text, strlen(msg_text),
                                            msg_p->iv_p, msg_p->iv_len,
                                            msg_p->key_p, msg_p->key_len,
                                            OMEMO_AES_GCM_TAG_LENGTH,
@@ -1312,6 +1323,7 @@ int omemo_message_export_decrypted(omemo_message * msg_p, uint8_t * key_p, size_
   size_t iv_len = 0;
   uint8_t * pt_p = (void *) 0;
   size_t pt_len = 0;
+  char * pt_str = (void *) 0;
   mxml_node_t * body_node_p = (void *) 0;
   char * xml = (void *) 0;
 
@@ -1344,8 +1356,17 @@ int omemo_message_export_decrypted(omemo_message * msg_p, uint8_t * key_p, size_
     goto cleanup;
   }
 
+  //FIXME: add null terminator to string
+  pt_str = malloc(pt_len + 1);
+  if (!pt_str) {
+    ret_val = OMEMO_ERR_NOMEM;
+    goto cleanup;
+  }
+  memcpy(pt_str, pt_p, pt_len);
+  pt_str[pt_len] = '\0';
+
   body_node_p = mxmlNewElement(MXML_NO_PARENT, BODY_NODE_NAME);
-  (void) mxmlNewText(body_node_p, 0, (char *) pt_p);
+  (void) mxmlNewText(body_node_p, 0, pt_str);
 
 
   mxmlAdd(msg_p->message_node_p, MXML_ADD_AFTER, MXML_ADD_TO_PARENT, body_node_p);
@@ -1362,6 +1383,7 @@ cleanup:
   g_free(payload_p);
   g_free(iv_p);
   free(pt_p);
+  free(pt_str);
   mxmlDelete(body_node_p);
 
   return ret_val;

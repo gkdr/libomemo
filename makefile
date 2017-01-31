@@ -8,6 +8,7 @@ LDIR = lib
 FILES =
 CFLAGS =-std=c11 -Wall -Wextra -Wpedantic -Wstrict-overflow -fno-strict-aliasing -funsigned-char -D_XOPEN_SOURCE=700 -D_BSD_SOURCE -fno-builtin-memset `pkg-config --cflags glib-2.0`
 CFLAGS_LURCH=$(CFLAGS) -DOMEMO_XMLNS='"lurch"'
+CFLAGS_CONVERSATIONS=$(CFLAGS) -DOMEMO_XMLNS='"eu.siacs.conversations.axolotl"' -DOMEMO_NS_SEPARATOR='"."' -DOMEMO_NS_NOVERSION
 COVFLAGS = --coverage -O0 -g $(CFLAGS)
 LFLAGS = -lmxml -pthread -ldl -lm -lcrypto `pkg-config --libs glib-2.0` -lsqlite3
 TESTFLAGS = -lcmocka $(LFLAGS)
@@ -21,8 +22,8 @@ libomemo: $(SDIR)/libomemo.c libomemo_crypto libomemo_storage $(BDIR)
 	libtool --mode=compile gcc -c $(SDIR)/$@.c $(CFLAGS) -o $(BDIR)/$@.lo
 	libtool --mode=link gcc -o $(BDIR)/$@.la $(BDIR)/$@.lo $(BDIR)/$@_crypto.lo $(BDIR)/$@_storage.lo
 	
-libomemo-lurch: $(SDIR)/libomemo.c libomemo_crypto libomemo_storage $(BDIR) 
-	libtool --mode=compile gcc -c $(SDIR)/libomemo.c $(CFLAGS_LURCH) -o $(BDIR)/$@.lo
+libomemo-conversations: $(SDIR)/libomemo.c libomemo_crypto libomemo_storage $(BDIR)
+	libtool --mode=compile gcc -c $(SDIR)/libomemo.c $(CFLAGS_CONVERSATIONS) -o $(BDIR)/libomemo.lo
 	libtool --mode=link gcc -o $(BDIR)/libomemo.la $(BDIR)/libomemo.lo $(BDIR)/libomemo_crypto.lo $(BDIR)/libomemo_storage.lo
 
 libomemo_crypto: $(SDIR)/libomemo_crypto.c build
