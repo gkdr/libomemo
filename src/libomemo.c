@@ -1210,12 +1210,6 @@ cleanup:
   return ret_val;
 }
 
-/**
- * Checks if the message has a payload, i.e. whether it is a MessageElement or KeyTransportElement.
- *
- * @param msg_p Pointer to the message.
- * @return 1 if has a payload, 0 if it does not.
- */
 int omemo_message_has_payload(omemo_message * msg_p) {
   return (msg_p->payload_node_p) ? 1 : 0;
 }
@@ -1356,7 +1350,6 @@ int omemo_message_export_decrypted(omemo_message * msg_p, uint8_t * key_p, size_
     goto cleanup;
   }
 
-  //FIXME: add null terminator to string
   pt_str = malloc(pt_len + 1);
   if (!pt_str) {
     ret_val = OMEMO_ERR_NOMEM;
