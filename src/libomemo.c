@@ -500,9 +500,11 @@ int omemo_bundle_import (const char * received_bundle, omemo_bundle ** bundle_pp
 
   items_node_p = mxmlLoadString((void *) 0, received_bundle, MXML_OPAQUE_CALLBACK);
   if (!items_node_p) {
+    printf("failed loading\n");
     ret_val = OMEMO_ERR_MALFORMED_XML;
     goto cleanup;
   }
+
   ret_val = strncmp(mxmlGetElement(items_node_p), ITEMS_NODE_NAME, strlen(ITEMS_NODE_NAME));
   if (ret_val) {
     ret_val = OMEMO_ERR_MALFORMED_XML;
@@ -511,9 +513,11 @@ int omemo_bundle_import (const char * received_bundle, omemo_bundle ** bundle_pp
 
   bundle_node_name = mxmlElementGetAttr(items_node_p, PEP_NODE_NAME);
   if (!bundle_node_name) {
+    printf("no bundle node name\n");
     ret_val = OMEMO_ERR_MALFORMED_XML;
     goto cleanup;
   }
+
   bundle_node_name_cpy = strdup(bundle_node_name);
   if (!bundle_node_name_cpy) {
     ret_val = OMEMO_ERR_NOMEM;
@@ -526,44 +530,55 @@ int omemo_bundle_import (const char * received_bundle, omemo_bundle ** bundle_pp
   device_id_dup = strndup(device_id, strlen(device_id));
   bundle_p->device_id = device_id_dup;
 
-  ret_val = expect_next_node(items_node_p, mxmlGetFirstChild, ITEM_NODE_NAME, &item_node_p);
-  if (ret_val) {
+  item_node_p = mxmlFindPath(items_node_p, ITEM_NODE_NAME);
+  if (!item_node_p) {
+    ret_val = OMEMO_ERR_MALFORMED_XML;
     goto cleanup;
   }
 
-  ret_val = expect_next_node(item_node_p, mxmlGetFirstChild, BUNDLE_NODE_NAME, &bundle_node_p);
-  if (ret_val) {
+  bundle_node_p = mxmlFindPath(item_node_p, BUNDLE_NODE_NAME);
+  if (!bundle_node_p) {
+    ret_val = OMEMO_ERR_MALFORMED_XML;
     goto cleanup;
   }
 
-  ret_val = expect_next_node(bundle_node_p, mxmlGetFirstChild, SIGNED_PRE_KEY_NODE_NAME, &signed_pk_node_p);
-  if (ret_val) {
+  signed_pk_node_p = mxmlFindPath(bundle_node_p, SIGNED_PRE_KEY_NODE_NAME);
+  if (!signed_pk_node_p) {
+    ret_val = OMEMO_ERR_MALFORMED_XML;
     goto cleanup;
   }
+  signed_pk_node_p = mxmlGetParent(signed_pk_node_p);
   bundle_p->signed_pk_node_p = signed_pk_node_p;
 
-  ret_val = expect_next_node(signed_pk_node_p, mxmlGetNextSibling, SIGNATURE_NODE_NAME, &signature_node_p);
-  if (ret_val) {
+  signature_node_p = mxmlFindPath(bundle_node_p, SIGNATURE_NODE_NAME);
+  if (!signature_node_p) {
+    ret_val = OMEMO_ERR_MALFORMED_XML;
     goto cleanup;
   }
+  signature_node_p = mxmlGetParent(signature_node_p);
   bundle_p->signature_node_p = signature_node_p;
 
-  ret_val = expect_next_node(signature_node_p, mxmlGetNextSibling, IDENTITY_KEY_NODE_NAME, &identity_key_node_p);
-  if (ret_val) {
+  identity_key_node_p = mxmlFindPath(bundle_node_p, IDENTITY_KEY_NODE_NAME);
+  if (!identity_key_node_p) {
+    ret_val = OMEMO_ERR_MALFORMED_XML;
     goto cleanup;
   }
+  identity_key_node_p = mxmlGetParent(identity_key_node_p);
   bundle_p->identity_key_node_p = identity_key_node_p;
 
-  ret_val = expect_next_node(identity_key_node_p, mxmlGetNextSibling, PREKEYS_NODE_NAME, &prekeys_node_p);
-  if (ret_val) {
+  prekeys_node_p = mxmlFindPath(bundle_node_p, PREKEYS_NODE_NAME);
+  if (!prekeys_node_p) {
+    ret_val = OMEMO_ERR_MALFORMED_XML;
     goto cleanup;
   }
   bundle_p->pre_keys_node_p = prekeys_node_p;
 
-  ret_val = expect_next_node(prekeys_node_p, mxmlGetFirstChild, PRE_KEY_NODE_NAME, &pre_key_node_p);
-  if (ret_val) {
+  pre_key_node_p = mxmlFindPath(prekeys_node_p, PRE_KEY_NODE_NAME);
+  if (!pre_key_node_p) {
+    ret_val = OMEMO_ERR_MALFORMED_XML;
     goto cleanup;
   }
+  pre_key_node_p = mxmlGetParent(pre_key_node_p);
   pre_keys_count++;
   pre_key_node_p = mxmlGetNextSibling(pre_key_node_p);
 
@@ -579,7 +594,6 @@ int omemo_bundle_import (const char * received_bundle, omemo_bundle ** bundle_pp
   mxmlRemove(prekeys_node_p);
 
   *bundle_pp = bundle_p;
-
 
 cleanup:
   if (ret_val) {
