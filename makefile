@@ -34,6 +34,17 @@ libomemo_storage: $(SDIR)/libomemo_storage.c build
 $(BDIR)/libomemo.o: $(BDIR) $(SDIR)/libomemo.c $(SDIR)/libomemo.h
 	gcc -c $(CFLAGS) $(SDIR)/libomemo.c -o $@
 	
+libomemo-conversations.o: $(SDIR)/libomemo.c $(BDIR)
+	gcc -c $(SDIR)/libomemo.c $(CFLAGS_CONVERSATIONS) -fPIC -o $(BDIR)/libomemo.o
+	
+libomemo_crypto.o: $(SDIR)/libomemo_crypto.c build
+	gcc -c $(SDIR)/libomemo_crypto.c $(CFLAGS) -fPIC -o $(BDIR)/$@
+
+libomemo_storage.o: $(SDIR)/libomemo_storage.c build
+	gcc -c $(SDIR)/libomemo_storage.c $(CFLAGS) -fPIC -o $(BDIR)/$@
+	
+libomemo-conversations-pic: libomemo-conversations.o libomemo_crypto.o libomemo_storage.o
+	
 .PHONY = test_libomemo.o
 test_libomemo: $(TDIR)/test_libomemo.c $(SDIR)/libomemo.c
 	gcc $(COVFLAGS) $<  $(FILES) -o $(TDIR)/$@.o $(TESTFLAGS)

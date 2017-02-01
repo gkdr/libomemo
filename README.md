@@ -11,7 +11,11 @@ Use [axc](https://github.com/gkdr/axc) for that.
 * [Mini-XML](http://www.msweet.org/projects.php?Z3) 
 * OpenSSL (which you probably already have)
 * glib
-* If you want to use the SQLite database, you will obviously need that.
+* SQLite for the database
+
+Optional: 
+* For testing: [cmocka](https://cmocka.org/) (`make test`)
+* For the coverage report: [gcovr](https://cmocka.org/) (`make coverage`)
 
 I recommend to simply link it statically - there are makefile targets for compilation as a libtool lib. 
 
