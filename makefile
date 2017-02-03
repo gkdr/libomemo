@@ -6,10 +6,14 @@ LDIR = lib
 # according to https://sourceware.org/bugzilla/show_bug.cgi?id=17879
 # -fno-builtin-memset is enough to make gcc not optimize it away
 FILES =
-CFLAGS =-std=c11 -Wall -Wextra -Wpedantic -Wstrict-overflow -fno-strict-aliasing -funsigned-char -D_XOPEN_SOURCE=700 -D_BSD_SOURCE -fno-builtin-memset `pkg-config --cflags glib-2.0`
+
+PKGCFG_C=$(shell pkg-config --cflags glib-2.0 sqlite3 mxml) $(shell libgcrypt-config --cflags)
+PKGCFG_L=$(shell pkg-config --libs glib-2.0 sqlite3 mxml) $(shell libgcrypt-config --libs)
+
+CFLAGS =-std=c11 -Wall -Wextra -Wpedantic -Wstrict-overflow -fno-strict-aliasing -funsigned-char -D_XOPEN_SOURCE=700 -D_BSD_SOURCE -fno-builtin-memset $(PKGCFG_C)
 CFLAGS_CONVERSATIONS=$(CFLAGS) -DOMEMO_XMLNS='"eu.siacs.conversations.axolotl"' -DOMEMO_NS_SEPARATOR='"."' -DOMEMO_NS_NOVERSION
 COVFLAGS = --coverage -O0 -g $(CFLAGS)
-LFLAGS = -lmxml -pthread -ldl -lm -lcrypto `pkg-config --libs glib-2.0` -lsqlite3
+LFLAGS =-pthread -ldl -lm $(PKGCFG_L)
 TESTFLAGS = -lcmocka $(LFLAGS)
 
 all: libomemo-conversations

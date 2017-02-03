@@ -885,8 +885,6 @@ void test_message_export_encrypted_extra(void ** state) {
   char * xml;
   assert_int_equal(omemo_message_export_encrypted(msg_p, &xml), 0);
 
-  printf("%s\n", xml);
-
   mxml_node_t * message_node_p = mxmlLoadString((void *) 0, xml, MXML_OPAQUE_CALLBACK);
   assert_ptr_not_equal(message_node_p, (void *) 0);
   assert_string_equal(mxmlGetElement(message_node_p), "message");
