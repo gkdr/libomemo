@@ -8,10 +8,10 @@ It does not handle the double ratchet sessions, just the encryption of the paylo
 Use [axc](https://github.com/gkdr/axc) for that.
 
 ## Dependencies
-* [Mini-XML](http://www.msweet.org/projects.php?Z3) 
-* OpenSSL (which you probably already have)
-* glib
-* SQLite for the database
+* [Mini-XML](http://www.msweet.org/projects.php?Z3) (`libmxml-dev`)
+* gcrypt (`libgcrypt20-dev`)
+* glib 
+* SQLite (`libsqlite3-dev`)
 
 Optional: 
 * For testing: [cmocka](https://cmocka.org/) (`make test`)
