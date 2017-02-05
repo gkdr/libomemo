@@ -96,6 +96,116 @@ struct omemo_message {
   size_t iv_len;
 };
 
+
+/*** COPYPASTE FIX BEGIN ***/
+/*
+ * 'mxmlGetLastChild()' - Get the last child of an element node.
+ *
+ * @code NULL@ is returned if the node is not an element node or if the node
+ * has no children.
+ *
+ * @since Mini-XML 2.7@
+ */
+
+mxml_node_t *				/* O - Last child or NULL */
+mxmlGetLastChild(mxml_node_t *node)	/* I - Node to get */
+{
+ /*
+  * Range check input...
+  */
+
+  if (!node || node->type != MXML_ELEMENT)
+    return (NULL);
+
+ /*
+  * Return the node type...
+  */
+
+  return (node->last_child);
+}
+
+/*
+ * 'mxmlGetFirstChild()' - Get the first child of an element node.
+ *
+ * @code NULL@ is returned if the node is not an element node or if the node
+ * has no children.
+ *
+ * @since Mini-XML 2.7@
+ */
+
+mxml_node_t *				/* O - First child or NULL */
+mxmlGetFirstChild(mxml_node_t *node)	/* I - Node to get */
+{
+ /*
+  * Range check input...
+  */
+
+  if (!node || node->type != MXML_ELEMENT)
+    return (NULL);
+
+ /*
+  * Return the first child node...
+  */
+
+  return (node->child);
+}
+
+/*
+ * 'mxmlGetNextSibling()' - Get the next node for the current parent.
+ *
+ * @code NULL@ is returned if this is the last child for the current parent.
+ *
+ * @since Mini-XML 2.7@
+ */
+
+mxml_node_t *
+mxmlGetNextSibling(mxml_node_t *node)	/* I - Node to get */
+{
+ /*
+  * Range check input...
+  */
+
+  if (!node)
+    return (NULL);
+
+ /*
+  * Return the node type...
+  */
+
+  return (node->next);
+}
+
+/*
+ * 'mxmlGetParent()' - Get the parent node.
+ *
+ * @code NULL@ is returned for a root node.
+ *
+ * @since Mini-XML 2.7@
+ */
+
+mxml_node_t *				/* O - Parent node or NULL */
+mxmlGetParent(mxml_node_t *node)	/* I - Node to get */
+{
+ /*
+  * Range check input...
+  */
+
+  if (!node)
+    return (NULL);
+
+ /*
+  * Return the node type...
+  */
+
+  return (node->parent);
+}
+
+/*** COPYPASTE FIX END ***/
+
+
+
+
+
 /**
  * Mostly helps dealing with the device ids that come as an int and have to be a string for XML.
  *
