@@ -482,10 +482,8 @@ int omemo_bundle_import (const char * received_bundle, omemo_bundle ** bundle_pp
   mxml_node_t * item_node_p = (void *) 0;
   mxml_node_t * bundle_node_p = (void *) 0;
   const char * bundle_node_name = (void *) 0;
-  char * bundle_node_name_cpy = (void *) 0;
-  char * bundle_node_name_cpy_orig = (void *) 0;
+  char ** split = (void *) 0;
   char * device_id = (void *) 0;
-  char * device_id_dup = (void *) 0;
   mxml_node_t * signed_pk_node_p = (void *) 0;
   mxml_node_t * signature_node_p = (void *) 0;
   mxml_node_t * identity_key_node_p = (void *) 0;
@@ -500,7 +498,6 @@ int omemo_bundle_import (const char * received_bundle, omemo_bundle ** bundle_pp
 
   items_node_p = mxmlLoadString((void *) 0, received_bundle, MXML_OPAQUE_CALLBACK);
   if (!items_node_p) {
-    printf("failed loading\n");
     ret_val = OMEMO_ERR_MALFORMED_XML;
     goto cleanup;
   }
@@ -513,22 +510,17 @@ int omemo_bundle_import (const char * received_bundle, omemo_bundle ** bundle_pp
 
   bundle_node_name = mxmlElementGetAttr(items_node_p, PEP_NODE_NAME);
   if (!bundle_node_name) {
-    printf("no bundle node name\n");
     ret_val = OMEMO_ERR_MALFORMED_XML;
     goto cleanup;
   }
 
-  bundle_node_name_cpy = strdup(bundle_node_name);
-  if (!bundle_node_name_cpy) {
-    ret_val = OMEMO_ERR_NOMEM;
-    goto cleanup;
+  split = g_strsplit(bundle_node_name, OMEMO_NS_SEPARATOR_FINAL, 6);
+  if (!g_strcmp0(OMEMO_NS_SEPARATOR, OMEMO_NS_SEPARATOR_FINAL)) {
+    device_id = g_strdup(split[5]);
+  } else {
+    device_id = g_strdup(split[1]);
   }
-  bundle_node_name_cpy_orig = bundle_node_name_cpy;
-  while (bundle_node_name_cpy) {
-    device_id = strsep(&bundle_node_name_cpy, ":");
-  }
-  device_id_dup = strndup(device_id, strlen(device_id));
-  bundle_p->device_id = device_id_dup;
+  bundle_p->device_id = device_id;
 
   item_node_p = mxmlFindPath(items_node_p, ITEM_NODE_NAME);
   if (!item_node_p) {
@@ -600,7 +592,7 @@ cleanup:
     omemo_bundle_destroy(bundle_p);
   }
   mxmlDelete(items_node_p);
-  free(bundle_node_name_cpy_orig);
+  g_strfreev(split);
 
   return ret_val;
 }
@@ -653,7 +645,7 @@ int omemo_devicelist_create(const char * from, omemo_devicelist ** dl_pp) {
     goto cleanup;
   }
 
-  from_dup = strndup(from, strlen(from));
+  from_dup = g_strndup(from, strlen(from));
   if (!from_dup) {
     ret_val = OMEMO_ERR_NOMEM;
     goto cleanup;
@@ -838,13 +830,6 @@ int omemo_devicelist_is_empty(omemo_devicelist * dl_p) {
   return dl_p->id_list_p ? 0 : 1;
 }
 
-static void * dl_cpy(const void * src_p, void * data_p) {
-  (void) data_p;
-  uint32_t * cpy_p = malloc(sizeof(uint32_t));
-  memcpy(cpy_p, src_p, sizeof(uint32_t));
-  return cpy_p;
-}
-
 int omemo_devicelist_diff(const omemo_devicelist * dl_a_p, const omemo_devicelist * dl_b_p, GList ** a_minus_b_pp, GList ** b_minus_a_pp) {
   if (!dl_a_p || !dl_b_p || !a_minus_b_pp || !b_minus_a_pp) {
     return OMEMO_ERR_NULL;
@@ -912,7 +897,22 @@ int omemo_devicelist_export(omemo_devicelist * dl_p, char ** xml_p) {
 }
 
 GList * omemo_devicelist_get_id_list(const omemo_devicelist * dl_p) {
-  return g_list_copy_deep(dl_p->id_list_p, dl_cpy, (void *) 0);
+  GList * new_l_p = (void *) 0;
+  GList * curr_p = (void *) 0;
+  uint32_t * cpy_p = (void *) 0;
+
+  for (curr_p = dl_p->id_list_p; curr_p; curr_p = curr_p->next) {
+    cpy_p = malloc(sizeof(uint32_t));
+    if (!cpy_p) {
+      g_list_free_full(new_l_p, free);
+      return (void *) 0;
+    }
+    memcpy(cpy_p, curr_p->data, (sizeof(uint32_t)));
+
+    new_l_p = g_list_append(new_l_p, cpy_p);
+  }
+
+  return new_l_p;
 }
 
 int omemo_devicelist_has_id_list(const omemo_devicelist * dl_p) {
