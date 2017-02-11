@@ -16,7 +16,7 @@ COVFLAGS = --coverage -O0 -g $(CFLAGS)
 LFLAGS =-pthread -ldl -lm $(PKGCFG_L)
 TESTFLAGS = -lcmocka $(LFLAGS)
 
-all: libomemo-conversations
+all: $(BDIR)/libomemo-conversations.a
 
 $(BDIR):
 	mkdir -p $@
@@ -38,16 +38,17 @@ libomemo_storage: $(SDIR)/libomemo_storage.c build
 $(BDIR)/libomemo.o: $(BDIR) $(SDIR)/libomemo.c $(SDIR)/libomemo.h
 	gcc -c $(CFLAGS) $(SDIR)/libomemo.c -o $@
 	
-libomemo-conversations.o: $(SDIR)/libomemo.c $(BDIR)
-	gcc -c $(SDIR)/libomemo.c $(CFLAGS_CONVERSATIONS) -fPIC -o $(BDIR)/libomemo.o
+$(BDIR)/libomemo-conversations.o: $(SDIR)/libomemo.c $(BDIR)
+	gcc -c $(SDIR)/libomemo.c $(CFLAGS_CONVERSATIONS) -fPIC -o $@
 	
-libomemo_crypto.o: $(SDIR)/libomemo_crypto.c build
-	gcc -c $(SDIR)/libomemo_crypto.c $(CFLAGS) -fPIC -o $(BDIR)/$@
+$(BDIR)/libomemo_crypto.o: $(SDIR)/libomemo_crypto.c $(BDIR)
+	gcc -c $(SDIR)/libomemo_crypto.c $(CFLAGS) -fPIC -o $@
 
-libomemo_storage.o: $(SDIR)/libomemo_storage.c build
-	gcc -c $(SDIR)/libomemo_storage.c $(CFLAGS) -fPIC -o $(BDIR)/$@
+$(BDIR)/libomemo_storage.o: $(SDIR)/libomemo_storage.c $(BDIR)
+	gcc -c $(SDIR)/libomemo_storage.c $(CFLAGS) -fPIC -o $@
 	
-libomemo-conversations-pic: libomemo-conversations.o libomemo_crypto.o libomemo_storage.o
+$(BDIR)/libomemo-conversations.a: $(BDIR)/libomemo-conversations.o $(BDIR)/libomemo_crypto.o $(BDIR)/libomemo_storage.o
+	ar rcs $@ $^
 	
 .PHONY = test_libomemo.o
 test_libomemo: $(TDIR)/test_libomemo.c $(SDIR)/libomemo.c
