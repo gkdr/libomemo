@@ -952,7 +952,7 @@ void omemo_devicelist_destroy(omemo_devicelist * dl_p) {
   }
 }
 
-int omemo_message_create(uint32_t sender_device_id, omemo_crypto_provider * crypto_p, omemo_message ** message_pp) {
+int omemo_message_create(uint32_t sender_device_id, const omemo_crypto_provider * crypto_p, omemo_message ** message_pp) {
   if (!crypto_p || !crypto_p->random_bytes_func || !crypto_p->aes_gcm_encrypt_func || !message_pp) {
     return OMEMO_ERR_NULL;
   }
@@ -1012,7 +1012,7 @@ cleanup:
   return ret_val;
 }
 
-int omemo_message_prepare_encryption(char * outgoing_message, uint32_t sender_device_id, omemo_crypto_provider * crypto_p, omemo_message ** message_pp) {
+int omemo_message_prepare_encryption(char * outgoing_message, uint32_t sender_device_id, const omemo_crypto_provider * crypto_p, omemo_message ** message_pp) {
   if (!outgoing_message || !crypto_p || !crypto_p->random_bytes_func || !crypto_p->aes_gcm_encrypt_func || !message_pp) {
     return OMEMO_ERR_NULL;
   }
@@ -1334,7 +1334,7 @@ cleanup:
   return ret_val;
 }
 
-int omemo_message_export_decrypted(omemo_message * msg_p, uint8_t * key_p, size_t key_len, omemo_crypto_provider * crypto_p, char ** msg_xml_p) {
+int omemo_message_export_decrypted(omemo_message * msg_p, uint8_t * key_p, size_t key_len, const omemo_crypto_provider * crypto_p, char ** msg_xml_p) {
   if (!msg_p || !msg_p->header_node_p || !msg_p->payload_node_p || !msg_p->message_node_p || !key_p || !crypto_p || !msg_xml_p) {
     return OMEMO_ERR_NULL;
   }
@@ -1348,6 +1348,9 @@ int omemo_message_export_decrypted(omemo_message * msg_p, uint8_t * key_p, size_
   const char * iv_b64 = (void *) 0;
   uint8_t * iv_p = (void *) 0;
   size_t iv_len = 0;
+  size_t key_len_actual = 0;
+  size_t payload_len_actual = 0;
+  uint8_t * tag_p = (void *) 0;
   uint8_t * pt_p = (void *) 0;
   size_t pt_len = 0;
   char * pt_str = (void *) 0;
@@ -1373,10 +1376,23 @@ int omemo_message_export_decrypted(omemo_message * msg_p, uint8_t * key_p, size_
   }
   iv_p = g_base64_decode(iv_b64, &iv_len);
 
-  ret_val = crypto_p->aes_gcm_decrypt_func(payload_p, payload_len - OMEMO_AES_GCM_TAG_LENGTH,
+  if (key_len == OMEMO_AES_128_KEY_LENGTH + OMEMO_AES_GCM_TAG_LENGTH) {
+    key_len_actual = OMEMO_AES_128_KEY_LENGTH;
+    payload_len_actual = payload_len;
+    tag_p = key_p + OMEMO_AES_128_KEY_LENGTH;
+  } else if (key_len == OMEMO_AES_128_KEY_LENGTH) {
+    key_len_actual = key_len;
+    payload_len_actual = payload_len - OMEMO_AES_GCM_TAG_LENGTH;
+    tag_p = payload_p + (payload_len - OMEMO_AES_GCM_TAG_LENGTH);
+  } else {
+    ret_val = OMEMO_ERR_UNSUPPORTED_KEY_LEN;
+    goto cleanup;
+  }
+
+  ret_val = crypto_p->aes_gcm_decrypt_func(payload_p, payload_len_actual,
                                            iv_p, iv_len,
-                                           key_p, key_len,
-                                           payload_p + (payload_len - OMEMO_AES_GCM_TAG_LENGTH), OMEMO_AES_GCM_TAG_LENGTH,
+                                           key_p, key_len_actual,
+                                           tag_p, OMEMO_AES_GCM_TAG_LENGTH,
                                            crypto_p->user_data_p,
                                            &pt_p, &pt_len);
   if (ret_val) {

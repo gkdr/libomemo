@@ -15,12 +15,26 @@ typedef struct omemo_crypto_provider {
    *
    * @param buf_p Will point to a buffer with the output bytes. free() when done.
    * @param buf_len The length of the buffer, or rather how many random bytes are written into the buffer.
-   * @returns 0 on success, negative on error.
+   * @param user_data_p Pointer to the user data set in the crypto provider.
+   * @return 0 on success, negative on error.
    */
   int (*random_bytes_func)(uint8_t ** buf_pp, size_t buf_len, void * user_data_p);
 
   /**
+   * Encrypts a byte buffer.
    *
+   * @param plaintext_p Pointer to the plaintext buffer.
+   * @param plaintext_len The length of the buffer.
+   * @param iv_p Pointer to the IV buffer.
+   * @param iv_len Length of the IV buffer.
+   * @param key_p Pointer to the key buffer.
+   * @param key_len Length of the key buffer.
+   * @param tag_len Length of the tag to generate.
+   * @param user_data_p Pointer to the user data set in the crypto provider.
+   * @param ciphertext_pp Will point to a pointer to the ciphertext buffer.
+   * @param ciphertext_len_p Will point to the length of the ciphertext buffer.
+   * @param tag_pp Will point to a pointer to the tag buffer.
+   * @return 0 on success, negative on error.
    */
   int (*aes_gcm_encrypt_func)(const uint8_t * plaintext_p, size_t plaintext_len,
                               const uint8_t * iv_p, size_t iv_len,
@@ -29,12 +43,33 @@ typedef struct omemo_crypto_provider {
                               void * user_data_p,
                               uint8_t ** ciphertext_pp, size_t * ciphertext_len_p,
                               uint8_t ** tag_pp);
+
+  /**
+   * Decrypts a ciphertext byte buffer.
+   *
+   * @param ciphertext_p Pointer to the ciphertext buffer.
+   * @param ciphertext_len Length of the ciphertext buffer.
+   * @param iv_p Pointer to the IV buffer.
+   * @param iv_len Length of the IV buffer.
+   * @param key_p Pointer to the key buffer.
+   * @param key_len Length of the key buffer.
+   * @param tag_p Pointer to the tag buffer.
+   * @param tag_len Length of the tag buffer.
+   * @param user_data_p Pointer to the user data set in the crypto provider.
+   * @param plaintext_pp Will point to a pointer to the plaintext.
+   * @param Will point to the length of the plaintext buffer.
+   * @return 0 on success, negative on error.
+   */
   int (*aes_gcm_decrypt_func)(const uint8_t * ciphertext_p, size_t ciphertext_len,
                               const uint8_t * iv_p, size_t iv_len,
                               const uint8_t * key_p, size_t key_len,
                               uint8_t * tag_p, size_t tag_len,
                               void * user_data_p,
                               uint8_t ** plaintext_pp, size_t * plaintext_len_p);
+
+  /**
+   * Pointer to the user data that will be passed to the functions.
+   */
   void * user_data_p;
 } omemo_crypto_provider;
 
@@ -55,6 +90,7 @@ typedef struct omemo_crypto_provider {
 #define OMEMO_ERR_NULL -10002
 #define OMEMO_ERR_CRYPTO -10010
 #define OMEMO_ERR_AUTH_FAIL -10020
+#define OMEMO_ERR_UNSUPPORTED_KEY_LEN -10030
 #define OMEMO_ERR_STORAGE -10100
 #define OMEMO_ERR_MALFORMED_BUNDLE -11000
 #define OMEMO_ERR_MALFORMED_XML -12000
@@ -342,7 +378,7 @@ void omemo_devicelist_destroy(omemo_devicelist * dl_p);
  * @param message_pp Will point to the created message struct.
  * @return 0 on success, negative on error.
  */
-int omemo_message_create(uint32_t sender_device_id, omemo_crypto_provider * crypto_p, omemo_message ** message_pp);
+int omemo_message_create(uint32_t sender_device_id, const omemo_crypto_provider * crypto_p, omemo_message ** message_pp);
 
 /**
  * Prepares an intercepted <message> stanza for encryption.
@@ -355,7 +391,7 @@ int omemo_message_create(uint32_t sender_device_id, omemo_crypto_provider * cryp
  * @param message_pp Will be set to a pointer to the message struct.
  * @return 0 on success, negative on error.
  */
-int omemo_message_prepare_encryption(char * outgoing_message, uint32_t sender_device_id, omemo_crypto_provider * crypto_p, omemo_message ** message_pp);
+int omemo_message_prepare_encryption(char * outgoing_message, uint32_t sender_device_id, const omemo_crypto_provider * crypto_p, omemo_message ** message_pp);
 
 /**
  * Gets the symmetric encryption key from the message struct so that it can be encrypted with the Signal session.
@@ -480,7 +516,7 @@ int omemo_message_get_encrypted_key(omemo_message * msg_p, uint32_t own_device_i
  * @param msg_xml_p Will be set to the xml string.
  * @return 0 on success, negative on error.
  */
-int omemo_message_export_decrypted(omemo_message * msg_p, uint8_t * key_p, size_t key_len, omemo_crypto_provider * crypto_p, char ** msg_xml_p);
+int omemo_message_export_decrypted(omemo_message * msg_p, uint8_t * key_p, size_t key_len, const omemo_crypto_provider * crypto_p, char ** msg_xml_p);
 
 /**
  * Frees the memory of everything contained in the message struct as well as the struct itself.
