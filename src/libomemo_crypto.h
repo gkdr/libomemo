@@ -26,3 +26,15 @@ int omemo_default_crypto_aes_gcm_decrypt( const uint8_t * ciphertext_p, size_t c
                                           uint8_t ** plaintext_pp, size_t * plaintext_len_p);
 
 void omemo_default_crypto_teardown(void);
+
+int omemo_padding_random_offset(unsigned int max_offset,
+                                unsigned int * offset);
+
+size_t omemo_padding_length(size_t plaintext_len, size_t paddedtext_max_len);
+
+int omemo_padding_add(uint8_t * plaintext_p, size_t plaintext_len,
+                      uint8_t * paddedtext_p, size_t paddedtext_max_len,
+                      size_t * paddedtext_len);
+
+void omemo_padding_remove(uint8_t * paddedtext_p, size_t paddedtext_len,
+                          uint8_t * plaintext_p, size_t * plaintext_len);
