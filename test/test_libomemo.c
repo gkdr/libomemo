@@ -114,6 +114,19 @@ void test_devicelist_import_empty(void ** state) {
   omemo_devicelist_destroy(dl_p);
 }
 
+void test_devicelist_import_empty_alt(void ** state) {
+  (void) state;
+
+  char * devicelist_empty = "<items node='urn:xmpp:omemo:0:devicelist' />";
+
+  omemo_devicelist * dl_p;
+  assert_int_equal(omemo_devicelist_import(devicelist_empty, "alice", &dl_p), 0);
+
+  assert_int_equal(omemo_devicelist_is_empty(dl_p), 1);
+
+  omemo_devicelist_destroy(dl_p);
+}
+
 void test_devicelist_add(void ** state) {
   (void) state;
 
@@ -1078,6 +1091,7 @@ int main(void) {
       cmocka_unit_test(test_devicelist_create),
       cmocka_unit_test(test_devicelist_import),
       cmocka_unit_test(test_devicelist_import_empty),
+      cmocka_unit_test(test_devicelist_import_empty_alt),
       cmocka_unit_test(test_devicelist_add),
       cmocka_unit_test(test_devicelist_contains_id),
       cmocka_unit_test(test_devicelist_remove),

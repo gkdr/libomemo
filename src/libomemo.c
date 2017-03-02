@@ -693,8 +693,15 @@ int omemo_devicelist_import(char * received_devicelist, const char * from, omemo
     goto cleanup;
   }
 
-  ret_val = expect_next_node(items_node_p, mxmlGetFirstChild, ITEM_NODE_NAME, &item_node_p);
+  item_node_p = mxmlGetFirstChild(items_node_p);
+  if (!item_node_p) {
+    ret_val = 0;
+    *dl_pp = dl_p;
+    goto cleanup;
+  }
+  ret_val = strncmp(mxmlGetElement(item_node_p), ITEM_NODE_NAME, strlen(ITEM_NODE_NAME));
   if (ret_val) {
+    ret_val = OMEMO_ERR_MALFORMED_XML;
     goto cleanup;
   }
 

@@ -1,3 +1,8 @@
+/**
+ * LIBOMEMO 0.4.1
+ */
+
+
 #pragma once
 
 #include <inttypes.h>

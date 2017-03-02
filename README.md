@@ -1,4 +1,4 @@
-# libomemo
+# libomemo 0.4.1
 Implements [OMEMO](https://conversations.im/omemo/) in C.
 
 Input and output are XML strings, so it does not force you to use a certain XML lib.
@@ -10,14 +10,14 @@ Use [axc](https://github.com/gkdr/axc) for that.
 ## Dependencies
 * [Mini-XML](http://www.msweet.org/projects.php?Z3) (`libmxml-dev`)
 * gcrypt (`libgcrypt20-dev`)
-* glib 
+* glib (`libglib2.0-dev`)
 * SQLite (`libsqlite3-dev`)
 
 Optional: 
 * For testing: [cmocka](https://cmocka.org/) (`make test`)
 * For the coverage report: [gcovr](https://cmocka.org/) (`make coverage`)
 
-I recommend to simply link it statically - there are makefile targets for compilation as a libtool lib. 
+I recommend to simply link it statically - the standard target is a is a static lib (containing PIC) which uses the _compatible_ namespace (i.e. not the one in the XEP). 
 
 ## Usage
 Basically, there are three data types: messages, devicelists, and bundles.
