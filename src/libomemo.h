@@ -1,5 +1,5 @@
 /**
- * LIBOMEMO 0.4.1
+ * LIBOMEMO 0.5.0
  */
 
 
@@ -434,10 +434,11 @@ int omemo_message_add_recipient(omemo_message * msg_p, uint32_t device_id, const
  * Also adds a <store> hint.
  *
  * @param msg_p Pointer to the message.
+ * @param add_msg One of ADD_MSG_* constants. For optionally adding a body, EME, or both.
  * @param msg_xml Will be set to the resulting xml string. free() when done with it.
  * @return 0 on success, negative on error.
  */
-int omemo_message_export_encrypted(omemo_message * msg_p, char ** msg_xml);
+int omemo_message_export_encrypted(omemo_message * msg_p, int add_msg, char ** msg_xml);
 
 /**
  * Prepares an intercepted <message> stanza for decryption by parsing it.

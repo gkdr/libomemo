@@ -70,6 +70,15 @@
 #define OMEMO_DB_DEFAULT_FN "omemo.sqlite"
 
 #define NO_OMEMO_MSG "You received an OMEMO encrypted message, but your client does not support it."
+#define ADD_MSG_NONE 0
+#define ADD_MSG_BODY 1
+#define ADD_MSG_EME  2
+#define ADD_MSG_BOTH 3
+
+#define EME_NODE_NAME "encryption"
+#define EME_XMLNS "urn:xmpp:eme:0"
+#define EME_NAMESPACE_ATTR_NAME "namespace"
+#define EME_NAME_ATTR_NAME "name"
 
 struct omemo_bundle {
   char * device_id;
@@ -1079,10 +1088,7 @@ int omemo_message_prepare_encryption(char * outgoing_message, uint32_t sender_de
     goto cleanup;
   }
 
-  ret_val = mxmlSetOpaque(body_node_p, NO_OMEMO_MSG);
-  if (ret_val) {
-    goto cleanup;
-  }
+  mxmlRemove(body_node_p);
 
   payload_p = malloc(sizeof(uint8_t) * (ct_len + OMEMO_AES_GCM_TAG_LENGTH));
   if (!payload_p) {
@@ -1141,32 +1147,59 @@ int omemo_message_add_recipient(omemo_message * msg_p, uint32_t device_id, const
   return 0;
 }
 
-int omemo_message_export_encrypted(omemo_message * msg_p, char ** msg_xml) {
+int omemo_message_export_encrypted(omemo_message * msg_p, int add_msg, char ** msg_xml) {
   if (!msg_p || !msg_p->message_node_p || !msg_p->header_node_p || !msg_p->payload_node_p || !msg_xml) {
     return OMEMO_ERR_NULL;
   }
 
-  mxml_node_t * encrypted_node_p = mxmlNewElement(msg_p->message_node_p, ENCRYPTED_NODE_NAME);
+  int ret_val = 0;
+
+  mxml_node_t * body_node_p = (void *) 0;
+  mxml_node_t * encrypted_node_p = (void *) 0;
+  mxml_node_t * eme_node_p = (void *) 0;
+  mxml_node_t * store_node_p = (void *) 0;
+  char * xml_str = (void *) 0;
+
+  if (add_msg == ADD_MSG_BODY || add_msg == ADD_MSG_BOTH) {
+    body_node_p = mxmlNewElement(msg_p->message_node_p, BODY_NODE_NAME);
+    (void) mxmlNewOpaque(body_node_p, NO_OMEMO_MSG);
+  }
+
+  encrypted_node_p = mxmlNewElement(msg_p->message_node_p, ENCRYPTED_NODE_NAME);
   mxmlElementSetAttr(encrypted_node_p, XMLNS_ATTR_NAME, OMEMO_NS);
 
   mxmlAdd(encrypted_node_p, MXML_ADD_AFTER, MXML_ADD_TO_PARENT, msg_p->header_node_p);
   mxmlAdd(encrypted_node_p, MXML_ADD_AFTER, MXML_ADD_TO_PARENT, msg_p->payload_node_p);
 
-  mxml_node_t * store_node_p = mxmlNewElement(msg_p->message_node_p, STORE_NODE_NAME);
+  if (add_msg == ADD_MSG_EME || add_msg == ADD_MSG_BOTH) {
+    eme_node_p = mxmlNewElement(msg_p->message_node_p, EME_NODE_NAME);
+    mxmlElementSetAttr(eme_node_p, XMLNS_ATTR_NAME, EME_XMLNS);
+    mxmlElementSetAttr(eme_node_p, EME_NAMESPACE_ATTR_NAME, OMEMO_NS);
+    mxmlElementSetAttr(eme_node_p, EME_NAME_ATTR_NAME, "OMEMO");
+  }
+
+  store_node_p = mxmlNewElement(msg_p->message_node_p, STORE_NODE_NAME);
   mxmlElementSetAttr(store_node_p, XMLNS_ATTR_NAME, HINTS_XMLNS);
 
-  char * xml = mxmlSaveAllocString(msg_p->message_node_p, MXML_NO_CALLBACK);
+  xml_str = mxmlSaveAllocString(msg_p->message_node_p, MXML_NO_CALLBACK);
+  if (!xml_str) {
+    ret_val = OMEMO_ERR;
+    goto cleanup;
+  }
 
-  mxmlRemove(msg_p->header_node_p);
-  mxmlRemove(msg_p->payload_node_p);
+  *msg_xml = xml_str;
+
+cleanup:
+  if (!ret_val) {
+    mxmlRemove(msg_p->header_node_p);
+    mxmlRemove(msg_p->payload_node_p);
+  }
+  mxmlDelete(body_node_p);
   mxmlDelete(encrypted_node_p);
   mxmlDelete(store_node_p);
-  if (!xml) {
-    return OMEMO_ERR;
-  } else {
-    *msg_xml = xml;
-    return 0;
-  }
+  mxmlDelete(eme_node_p);
+
+  return ret_val;
 }
 
 int omemo_message_prepare_decryption(char * incoming_message, omemo_message ** msg_pp) {
@@ -1175,13 +1208,14 @@ int omemo_message_prepare_decryption(char * incoming_message, omemo_message ** m
   }
 
   int ret_val = 0;
-  mxml_node_t * message_node_p = (void *) 0;
-  mxml_node_t * body_node_p = (void *) 0;
-  mxml_node_t * store_node_p = (void *) 0;
+  mxml_node_t * message_node_p   = (void *) 0;
+  mxml_node_t * body_node_p      = (void *) 0;
+  mxml_node_t * eme_node_p       = (void *) 0;
+  mxml_node_t * store_node_p     = (void *) 0;
   mxml_node_t * encrypted_node_p = (void *) 0;
-  mxml_node_t * header_node_p = (void *) 0;
-  mxml_node_t * payload_node_p = (void *) 0;
-  omemo_message * msg_p = (void *) 0;
+  mxml_node_t * header_node_p    = (void *) 0;
+  mxml_node_t * payload_node_p   = (void *) 0;
+  omemo_message * msg_p          = (void *) 0;
 
   message_node_p = mxmlLoadString((void *) 0, incoming_message, MXML_OPAQUE_CALLBACK);
   if (!message_node_p) {
@@ -1196,6 +1230,8 @@ int omemo_message_prepare_decryption(char * incoming_message, omemo_message ** m
       goto cleanup;
     }
   }
+
+  eme_node_p = mxmlFindPath(message_node_p, EME_NODE_NAME);
 
   store_node_p = mxmlFindPath(message_node_p, STORE_NODE_NAME);
 
@@ -1222,6 +1258,10 @@ int omemo_message_prepare_decryption(char * incoming_message, omemo_message ** m
 
   if (body_node_p) {
     mxmlDelete(body_node_p);
+  }
+
+  if (eme_node_p) {
+    mxmlDelete(eme_node_p);
   }
 
   if (store_node_p) {

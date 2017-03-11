@@ -856,17 +856,14 @@ void test_message_export_encrypted(void ** state) {
   assert_int_equal(omemo_message_add_recipient(msg_p, rid, &data[0], 4), 0);
 
   char * xml;
-  assert_int_equal(omemo_message_export_encrypted(msg_p, &xml), 0);
+  assert_int_equal(omemo_message_export_encrypted(msg_p, ADD_MSG_NONE, &xml), 0);
 
   mxml_node_t * message_node_p = mxmlLoadString((void *) 0, xml, MXML_OPAQUE_CALLBACK);
   assert_ptr_not_equal(message_node_p, (void *) 0);
   assert_string_equal(mxmlGetElement(message_node_p), "message");
 
-  mxml_node_t * body_node_p;
-  assert_int_equal(expect_next_node(message_node_p, mxmlGetFirstChild, "body", &body_node_p), 0);
-
   mxml_node_t * encrypted_node_p;
-  assert_int_equal(expect_next_node(body_node_p, mxmlGetNextSibling, "encrypted", &encrypted_node_p), 0);
+  assert_int_equal(expect_next_node(message_node_p, mxmlGetFirstChild, "encrypted", &encrypted_node_p), 0);
   assert_string_equal(mxmlElementGetAttr(encrypted_node_p, "xmlns"), "urn:xmpp:omemo:0");
 
   mxml_node_t * header_node_p;
@@ -885,7 +882,7 @@ void test_message_export_encrypted(void ** state) {
   omemo_message_destroy(msg_p);
 }
 
-void test_message_export_encrypted_extra(void ** state) {
+void test_message_export_encrypted_with_extra_tags_and_body(void ** state) {
   (void) state;
 
   uint32_t sid = 4321;
@@ -896,7 +893,7 @@ void test_message_export_encrypted_extra(void ** state) {
   assert_int_equal(omemo_message_add_recipient(msg_p, rid, &data[0], 4), 0);
 
   char * xml;
-  assert_int_equal(omemo_message_export_encrypted(msg_p, &xml), 0);
+  assert_int_equal(omemo_message_export_encrypted(msg_p, ADD_MSG_BODY, &xml), 0);
 
   mxml_node_t * message_node_p = mxmlLoadString((void *) 0, xml, MXML_OPAQUE_CALLBACK);
   assert_ptr_not_equal(message_node_p, (void *) 0);
@@ -929,6 +926,49 @@ void test_message_export_encrypted_extra(void ** state) {
   omemo_message_destroy(msg_p);
 }
 
+void test_message_export_encrypted_with_eme(void ** state) {
+  (void) state;
+
+  uint32_t sid = 4321;
+  uint32_t rid = 1234;
+
+  omemo_message * msg_p;
+  assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, &crypto, &msg_p), 0);
+  assert_int_equal(omemo_message_add_recipient(msg_p, rid, &data[0], 4), 0);
+
+  char * xml;
+  assert_int_equal(omemo_message_export_encrypted(msg_p, ADD_MSG_EME, &xml), 0);
+
+  mxml_node_t * message_node_p = mxmlLoadString((void *) 0, xml, MXML_OPAQUE_CALLBACK);
+  assert_ptr_not_equal(message_node_p, (void *) 0);
+  assert_string_equal(mxmlGetElement(message_node_p), "message");
+
+  mxml_node_t * encrypted_node_p;
+  assert_int_equal(expect_next_node(message_node_p, mxmlGetFirstChild, "encrypted", &encrypted_node_p), 0);
+  assert_string_equal(mxmlElementGetAttr(encrypted_node_p, "xmlns"), "urn:xmpp:omemo:0");
+
+  mxml_node_t * header_node_p;
+  assert_int_equal(expect_next_node(encrypted_node_p, mxmlGetFirstChild, "header", &header_node_p), 0);
+  assert_string_equal(mxmlElementGetAttr(header_node_p, "sid"), "4321");
+
+  mxml_node_t * payload_node_p;
+  assert_int_equal(expect_next_node(header_node_p, mxmlGetNextSibling, "payload", &payload_node_p), 0);
+
+  mxml_node_t * eme_node_p;
+  assert_int_equal(expect_next_node(encrypted_node_p, mxmlGetNextSibling, "encryption", &eme_node_p), 0);
+  assert_string_equal(mxmlElementGetAttr(eme_node_p, "xmlns"), "urn:xmpp:eme:0");
+  assert_string_equal(mxmlElementGetAttr(eme_node_p, "namespace"), OMEMO_NS);
+  assert_string_equal(mxmlElementGetAttr(eme_node_p, "name"), "OMEMO");
+
+  mxml_node_t * store_node_p;
+  assert_int_equal(expect_next_node(eme_node_p, mxmlGetNextSibling, "store", &store_node_p), 0);
+  assert_string_equal(mxmlElementGetAttr(store_node_p, "xmlns"), "urn:xmpp:hints");
+
+  mxmlDelete(message_node_p);
+  free(xml);
+  omemo_message_destroy(msg_p);
+}
+
 void test_message_encrypt_decrypt(void ** state) {
   (void) state;
 
@@ -943,7 +983,7 @@ void test_message_encrypt_decrypt(void ** state) {
   assert_int_equal(omemo_message_add_recipient(msg_out_p, rid, key_p, omemo_message_get_key_len(msg_out_p)), 0);
 
   char * xml_out;
-  assert_int_equal(omemo_message_export_encrypted(msg_out_p, &xml_out), 0);
+  assert_int_equal(omemo_message_export_encrypted(msg_out_p, ADD_MSG_NONE, &xml_out), 0);
 
   omemo_message * msg_in_p;
   assert_int_equal(omemo_message_prepare_decryption(xml_out, &msg_in_p), 0);
@@ -981,7 +1021,7 @@ void test_message_encrypt_decrypt(void ** state) {
   free(key_retrieved_p);
 }
 
-void test_message_encrypt_decrypt_extra(void ** state) {
+void test_message_encrypt_decrypt_with_extra_nodes(void ** state) {
   (void) state;
 
   uint32_t sid = 4321;
@@ -995,7 +1035,7 @@ void test_message_encrypt_decrypt_extra(void ** state) {
   assert_int_equal(omemo_message_add_recipient(msg_out_p, rid, key_p, omemo_message_get_key_len(msg_out_p)), 0);
 
   char * xml_out;
-  assert_int_equal(omemo_message_export_encrypted(msg_out_p, &xml_out), 0);
+  assert_int_equal(omemo_message_export_encrypted(msg_out_p, ADD_MSG_NONE, &xml_out), 0);
 
   omemo_message * msg_in_p;
   assert_int_equal(omemo_message_prepare_decryption(xml_out, &msg_in_p), 0);
@@ -1036,6 +1076,93 @@ void test_message_encrypt_decrypt_extra(void ** state) {
   free(key_retrieved_p);
 }
 
+void test_message_encrypt_decrypt_with_added_body(void ** state) {
+  (void) state;
+
+  uint32_t sid = 4321;
+  uint32_t rid = 1234;
+
+  omemo_message * msg_out_p;
+  assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, &crypto, &msg_out_p), 0);
+
+  const uint8_t * key_p = omemo_message_get_key(msg_out_p);
+
+  assert_int_equal(omemo_message_add_recipient(msg_out_p, rid, key_p, omemo_message_get_key_len(msg_out_p)), 0);
+
+  char * xml_out;
+  assert_int_equal(omemo_message_export_encrypted(msg_out_p, ADD_MSG_BODY, &xml_out), 0);
+
+  omemo_message * msg_in_p;
+  assert_int_equal(omemo_message_prepare_decryption(xml_out, &msg_in_p), 0);
+
+  assert_int_equal(omemo_message_get_sender_id(msg_in_p), sid);
+
+  uint8_t * key_retrieved_p;
+  size_t key_retrieved_len;
+  assert_int_equal(omemo_message_get_encrypted_key(msg_in_p, rid, &key_retrieved_p, &key_retrieved_len), 0);
+  assert_int_equal(key_retrieved_len, OMEMO_AES_128_KEY_LENGTH);
+  assert_memory_equal(key_p, key_retrieved_p, key_retrieved_len);
+
+  char * xml_in;
+  assert_int_equal(omemo_message_export_decrypted(msg_in_p, key_retrieved_p, key_retrieved_len, &crypto, &xml_in), 0);
+  mxml_node_t * message_node_decrypted_p = mxmlLoadString((void *) 0, xml_in, MXML_OPAQUE_CALLBACK);
+  assert_ptr_not_equal(message_node_decrypted_p, (void *) 0);
+  mxml_node_t * body_text_node_p = mxmlFindPath(message_node_decrypted_p, "body");
+  assert_string_equal(mxmlGetOpaque(body_text_node_p), "hello");
+
+  omemo_message_destroy(msg_out_p);
+  omemo_message_destroy(msg_in_p);
+  free(xml_out);
+  free(xml_in);
+  free(key_retrieved_p);
+}
+
+void test_message_encrypt_decrypt_with_added_eme(void ** state) {
+  (void) state;
+
+  uint32_t sid = 4321;
+  uint32_t rid = 1234;
+
+  omemo_message * msg_out_p;
+  assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, &crypto, &msg_out_p), 0);
+
+  const uint8_t * key_p = omemo_message_get_key(msg_out_p);
+
+  assert_int_equal(omemo_message_add_recipient(msg_out_p, rid, key_p, omemo_message_get_key_len(msg_out_p)), 0);
+
+  char * xml_out;
+  assert_int_equal(omemo_message_export_encrypted(msg_out_p, ADD_MSG_EME, &xml_out), 0);
+
+  omemo_message * msg_in_p;
+  assert_int_equal(omemo_message_prepare_decryption(xml_out, &msg_in_p), 0);
+
+  assert_int_equal(omemo_message_get_sender_id(msg_in_p), sid);
+
+  uint8_t * key_retrieved_p;
+  size_t key_retrieved_len;
+  assert_int_equal(omemo_message_get_encrypted_key(msg_in_p, rid, &key_retrieved_p, &key_retrieved_len), 0);
+  assert_int_equal(key_retrieved_len, OMEMO_AES_128_KEY_LENGTH);
+  assert_memory_equal(key_p, key_retrieved_p, key_retrieved_len);
+
+  char * xml_in;
+  assert_int_equal(omemo_message_export_decrypted(msg_in_p, key_retrieved_p, key_retrieved_len, &crypto, &xml_in), 0);
+  mxml_node_t * message_node_decrypted_p = mxmlLoadString((void *) 0, xml_in, MXML_OPAQUE_CALLBACK);
+  assert_ptr_not_equal(message_node_decrypted_p, (void *) 0);
+  mxml_node_t * body_text_node_p = mxmlFindPath(message_node_decrypted_p, "body");
+  assert_string_equal(mxmlGetOpaque(body_text_node_p), "hello");
+
+  mxml_node_t * eme_node_p = mxmlFindPath(message_node_decrypted_p, "encryption");
+  assert_ptr_equal(eme_node_p, (void *) 0);
+
+  omemo_message_destroy(msg_out_p);
+  omemo_message_destroy(msg_in_p);
+  free(xml_out);
+  free(xml_in);
+  free(key_retrieved_p);
+}
+
+
+
 void test_message_export_decrypted_with_encrypted_tag(void ** state) {
   (void) state;
 
@@ -1058,7 +1185,7 @@ void test_message_export_decrypted_with_encrypted_tag(void ** state) {
   assert_int_equal(mxmlSetOpaque(msg_out_p->payload_node_p, payload_b64_new), 0);
 
   char * xml;
-  assert_int_equal(omemo_message_export_encrypted(msg_out_p, &xml), 0);
+  assert_int_equal(omemo_message_export_encrypted(msg_out_p, ADD_MSG_NONE, &xml), 0);
 
   omemo_message * msg_in_p;
   assert_int_equal(omemo_message_prepare_decryption(xml, &msg_in_p), 0);
@@ -1123,9 +1250,12 @@ int main(void) {
       cmocka_unit_test(test_message_get_encrypted_key_no_keys),
       cmocka_unit_test(test_message_add_recipient),
       cmocka_unit_test(test_message_export_encrypted),
-      cmocka_unit_test(test_message_export_encrypted_extra),
+      cmocka_unit_test(test_message_export_encrypted_with_extra_tags_and_body),
+      cmocka_unit_test(test_message_export_encrypted_with_eme),
       cmocka_unit_test(test_message_encrypt_decrypt),
-      cmocka_unit_test(test_message_encrypt_decrypt_extra),
+      cmocka_unit_test(test_message_encrypt_decrypt_with_extra_nodes),
+      cmocka_unit_test(test_message_encrypt_decrypt_with_added_body),
+      cmocka_unit_test(test_message_encrypt_decrypt_with_added_eme),
       cmocka_unit_test(test_message_export_decrypted_with_encrypted_tag),
       cmocka_unit_test(test_message_get_names)
   };

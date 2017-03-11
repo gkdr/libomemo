@@ -1,11 +1,11 @@
-# libomemo 0.4.1
-Implements [OMEMO](https://conversations.im/omemo/) in C.
+# libomemo 0.5.0
+Implements [OMEMO](https://conversations.im/omemo/) ([XEP-0384](https://xmpp.org/extensions/xep-0384.html)) in C.
 
 Input and output are XML strings, so it does not force you to use a certain XML lib.
 While the actual protocol functions do not depend on any kind of storage, it comes with a basic implementation in SQLite.
 
-It does not handle the double ratchet sessions, just the encryption of the payload.
-Use [axc](https://github.com/gkdr/axc) for that.
+It deals with devicelists and bundles as well as encrypting the payload, but does not handle the double ratchet sessions for encrypting the key to the payload.
+However, you can use my [axc](https://github.com/gkdr/axc) lib for that and easily combine it with this one (or write all the libsignal client code yourself if that is better suited to your needs).
 
 ## Dependencies
 * [Mini-XML](http://www.msweet.org/projects.php?Z3) (`libmxml-dev`)
