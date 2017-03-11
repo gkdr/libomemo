@@ -70,10 +70,6 @@
 #define OMEMO_DB_DEFAULT_FN "omemo.sqlite"
 
 #define NO_OMEMO_MSG "You received an OMEMO encrypted message, but your client does not support it."
-#define ADD_MSG_NONE 0
-#define ADD_MSG_BODY 1
-#define ADD_MSG_EME  2
-#define ADD_MSG_BOTH 3
 
 #define EME_NODE_NAME "encryption"
 #define EME_XMLNS "urn:xmpp:eme:0"
@@ -1160,7 +1156,7 @@ int omemo_message_export_encrypted(omemo_message * msg_p, int add_msg, char ** m
   mxml_node_t * store_node_p = (void *) 0;
   char * xml_str = (void *) 0;
 
-  if (add_msg == ADD_MSG_BODY || add_msg == ADD_MSG_BOTH) {
+  if (add_msg == OMEMO_ADD_MSG_BODY || add_msg == OMEMO_ADD_MSG_BOTH) {
     body_node_p = mxmlNewElement(msg_p->message_node_p, BODY_NODE_NAME);
     (void) mxmlNewOpaque(body_node_p, NO_OMEMO_MSG);
   }
@@ -1171,7 +1167,7 @@ int omemo_message_export_encrypted(omemo_message * msg_p, int add_msg, char ** m
   mxmlAdd(encrypted_node_p, MXML_ADD_AFTER, MXML_ADD_TO_PARENT, msg_p->header_node_p);
   mxmlAdd(encrypted_node_p, MXML_ADD_AFTER, MXML_ADD_TO_PARENT, msg_p->payload_node_p);
 
-  if (add_msg == ADD_MSG_EME || add_msg == ADD_MSG_BOTH) {
+  if (add_msg == OMEMO_ADD_MSG_EME || add_msg == OMEMO_ADD_MSG_BOTH) {
     eme_node_p = mxmlNewElement(msg_p->message_node_p, EME_NODE_NAME);
     mxmlElementSetAttr(eme_node_p, XMLNS_ATTR_NAME, EME_XMLNS);
     mxmlElementSetAttr(eme_node_p, EME_NAMESPACE_ATTR_NAME, OMEMO_NS);

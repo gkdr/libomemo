@@ -100,6 +100,11 @@ typedef struct omemo_crypto_provider {
 #define OMEMO_ERR_MALFORMED_BUNDLE -11000
 #define OMEMO_ERR_MALFORMED_XML -12000
 
+#define OMEMO_ADD_MSG_NONE 0
+#define OMEMO_ADD_MSG_BODY 1
+#define OMEMO_ADD_MSG_EME  2
+#define OMEMO_ADD_MSG_BOTH 3
+
 #define omemo_devicelist_list_data(X) (*((uint32_t *) X->data))
 
 /*-------------------- BUNDLE --------------------*/
