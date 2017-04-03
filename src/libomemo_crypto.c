@@ -5,8 +5,12 @@
 
 #include "libomemo.h"
 
-#define MINIMUM_PADDED_LENGTH 256
-#define PADDING_CHARACTER     ' '
+#define MINIMUM_PADDED_LENGTH   256
+#define PADDING_CHARACTER       0x200B
+#define PADDING_CHAR1           ((PADDING_CHARACTER>>12) | 0xE0)
+#define PADDING_CHAR2           (((PADDING_CHARACTER>>6) & 0x3F) | 0x80)
+#define PADDING_CHAR3           ((PADDING_CHARACTER & 0x3F) | 0x80)
+#define PADDING_CHARACTER_BYTES 3
 
 /* text below this length will be padded to a number of fixed lengths */
 #define SHORT_MESSAGE_LENGTH  4096
@@ -40,8 +44,8 @@ int omemo_padding_random_offset(unsigned int max_offset,
     return OMEMO_ERR_NOMEM;
 
   *offset =
-    (unsigned int)((buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3]) %
-    max_offset;
+      (unsigned int)((buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3]) %
+      (max_offset/PADDING_CHARACTER_BYTES);
 
   free(buf);
   return 0;
@@ -65,7 +69,7 @@ size_t omemo_padding_length(size_t plaintext_len, size_t paddedtext_max_len) {
 int omemo_padding_add(uint8_t * plaintext_p, size_t plaintext_len,
                       uint8_t * paddedtext_p, size_t paddedtext_max_len,
                       size_t * paddedtext_len) {
-  unsigned int offset;
+  unsigned int offset, i;
   size_t pad;
 
   /* empty string */
@@ -79,27 +83,46 @@ int omemo_padding_add(uint8_t * plaintext_p, size_t plaintext_len,
   /* get the padding length */
   pad = omemo_padding_length(plaintext_len, paddedtext_max_len);
 
-  /* clear the padded text */
-  memset((void*)paddedtext_p, PADDING_CHARACTER, pad*sizeof(uint8_t));
-
   /* get a random offset for the beginning of the plaintext
      within the padded text */
   if (omemo_padding_random_offset(pad - plaintext_len - 1,
                                   &offset) != 0)
     return 3;
 
-  /* ensure that any string terminator isn't copied */
-  if (plaintext_p[plaintext_len-1] == 0)
-    plaintext_len--;
+  /* pad the beginning with 3 byte utf-8 */
+  for (i = 0; i < offset*PADDING_CHARACTER_BYTES;
+       i += PADDING_CHARACTER_BYTES) {
+    paddedtext_p[i] = PADDING_CHAR1;
+    paddedtext_p[i+1] = PADDING_CHAR2;
+    paddedtext_p[i+2] = PADDING_CHAR3;
+  }
 
   /* copy the plaintext into the padded text at the given offset */
-  memcpy((void*)&paddedtext_p[offset], (void*)plaintext_p, plaintext_len);
+  memcpy((void*)&paddedtext_p[i], (void*)plaintext_p, plaintext_len);
+
+  /* append spaces as a filler if needed, to make the remaining
+     number of characters divisible by 3.
+     This will be at most two characters. */
+  i = offset*PADDING_CHARACTER_BYTES + plaintext_len;
+  while ((pad - i) % 3 != 0)
+      paddedtext_p[i++] = ' ';
+
+  /* add 3 byte utf-8 padding after the end of the plaintext */
+  while (i <= pad-PADDING_CHARACTER_BYTES) {
+    paddedtext_p[i++] = PADDING_CHAR1;
+    paddedtext_p[i++] = PADDING_CHAR2;
+    paddedtext_p[i++] = PADDING_CHAR3;
+  }
+
+  /* unexpected string length */
+  if (i != pad)
+      return 4;
 
   /* add a string terminator */
-  paddedtext_p[pad-1] = 0;
+  paddedtext_p[i] = 0;
 
   /* return the padded text length */
-  *paddedtext_len = pad;
+  *paddedtext_len = i;
 
   return 0;
 }
@@ -116,16 +139,27 @@ void omemo_padding_remove(uint8_t * paddedtext_p, size_t paddedtext_len,
   }
 
   /* find the start of the text */
-  while (start_offset < paddedtext_len) {
-    if (paddedtext_p[start_offset] != PADDING_CHARACTER)
+  while (start_offset < paddedtext_len-PADDING_CHARACTER_BYTES) {
+    if (!((paddedtext_p[start_offset] == PADDING_CHAR1) &&
+          (paddedtext_p[start_offset+1] == PADDING_CHAR2) &&
+          (paddedtext_p[start_offset+2] == PADDING_CHAR3)))
       break;
-    start_offset++;
+    start_offset+=PADDING_CHARACTER_BYTES;
   }
 
   /* find the end of the text */
   end_offset=(unsigned int)paddedtext_len-1;
-  while (end_offset > 0) {
-      if ((paddedtext_p[end_offset] != PADDING_CHARACTER) &&
+  while (end_offset > start_offset+PADDING_CHARACTER_BYTES) {
+    if (paddedtext_p[end_offset] != PADDING_CHAR3)
+        break;
+    if (paddedtext_p[end_offset-1] != PADDING_CHAR2)
+        break;
+    if (paddedtext_p[end_offset-2] != PADDING_CHAR1)
+        break;
+    end_offset-=PADDING_CHARACTER_BYTES;
+  }
+  while (end_offset > start_offset) {
+    if ((paddedtext_p[end_offset] != ' ') &&
         (paddedtext_p[end_offset] != 0))
       break;
     end_offset--;

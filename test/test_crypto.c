@@ -24,26 +24,27 @@ int openssl_teardown(void ** state) {
 void test_padding_offset(void ** state) {
   (void) state;
 
-  unsigned int bucket[32];
+  unsigned int bucket[32/PADDING_CHARACTER_BYTES];
   unsigned int offset, filled=0;
 
-  memset((void*)&bucket[0],'\0',sizeof(unsigned int)*32);
+  memset((void*)&bucket[0],'\0',
+         sizeof(unsigned int)*32/PADDING_CHARACTER_BYTES);
 
   /* check that buckets are empty */
-  for (unsigned int i = 0; i < 32; i++)
+  for (unsigned int i = 0; i < 32/PADDING_CHARACTER_BYTES; i++)
     assert_int_equal(bucket[i], 0);
 
   /* record some random offset values */
   for (unsigned int i = 0; i < 10000; i++)
     if (omemo_padding_random_offset(32, &offset) == 0) {
-      assert_in_range(offset, 0, 32);
+      assert_in_range(offset, 0, 32/PADDING_CHARACTER_BYTES);
       bucket[offset]++;
     }
 
   /* check the range of offsets */
-  for (unsigned int i = 0; i < 32; i++)
+  for (unsigned int i = 0; i < 32/PADDING_CHARACTER_BYTES; i++)
     if (bucket[i] > 0) filled++;
-  assert_true(filled >= 30);
+  assert_true(filled >= (32/PADDING_CHARACTER_BYTES)-2);
 }
 
 
@@ -53,12 +54,12 @@ void test_padding_length(void ** state) {
   size_t paddings[] = {
     0, MINIMUM_PADDED_LENGTH,
     31, MINIMUM_PADDED_LENGTH,
-    256, MINIMUM_PADDED_LENGTH,
+    256, MINIMUM_PADDED_LENGTH*1,
     257, MINIMUM_PADDED_LENGTH*2,
-    512, MINIMUM_PADDED_LENGTH*2,
-    513, MINIMUM_PADDED_LENGTH*4,
-    1024, MINIMUM_PADDED_LENGTH*4,
-    1025, MINIMUM_PADDED_LENGTH*8,
+    510, MINIMUM_PADDED_LENGTH*2,
+    770, MINIMUM_PADDED_LENGTH*4,
+    1500, MINIMUM_PADDED_LENGTH*8,
+    1600, MINIMUM_PADDED_LENGTH*8,
     0, 0
   };
 
