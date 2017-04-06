@@ -9,7 +9,6 @@
 
 #include <glib.h>
 
-typedef struct omemo_list_item omemo_list_item;
 typedef struct omemo_bundle omemo_bundle;
 typedef struct omemo_devicelist omemo_devicelist;
 typedef struct omemo_message omemo_message;
@@ -82,28 +81,31 @@ typedef struct omemo_crypto_provider {
 #define OMEMO_AES_GCM_IV_LENGTH  16
 #define OMEMO_AES_GCM_TAG_LENGTH 16
 
-#define OMEMO_LOG_OFF -1
-#define OMEMO_LOG_ERROR 0
+#define OMEMO_LOG_OFF    -1
+#define OMEMO_LOG_ERROR   0
 #define OMEMO_LOG_WARNING 1
-#define OMEMO_LOG_NOTICE 2
-#define OMEMO_LOG_INFO 3
-#define OMEMO_LOG_DEBUG 4
+#define OMEMO_LOG_NOTICE  2
+#define OMEMO_LOG_INFO    3
+#define OMEMO_LOG_DEBUG   4
 
-#define OMEMO_SUCCESS 0
-#define OMEMO_ERR -10000
-#define OMEMO_ERR_NOMEM -10001
-#define OMEMO_ERR_NULL -10002
-#define OMEMO_ERR_CRYPTO -10010
-#define OMEMO_ERR_AUTH_FAIL -10020
+#define OMEMO_SUCCESS                      0
+#define OMEMO_ERR                     -10000
+#define OMEMO_ERR_NOMEM               -10001
+#define OMEMO_ERR_NULL                -10002
+#define OMEMO_ERR_CRYPTO              -10010
+#define OMEMO_ERR_AUTH_FAIL           -10020
 #define OMEMO_ERR_UNSUPPORTED_KEY_LEN -10030
-#define OMEMO_ERR_STORAGE -10100
-#define OMEMO_ERR_MALFORMED_BUNDLE -11000
-#define OMEMO_ERR_MALFORMED_XML -12000
+#define OMEMO_ERR_STORAGE             -10100
+#define OMEMO_ERR_MALFORMED_BUNDLE    -11000
+#define OMEMO_ERR_MALFORMED_XML       -12000
 
 #define OMEMO_ADD_MSG_NONE 0
 #define OMEMO_ADD_MSG_BODY 1
 #define OMEMO_ADD_MSG_EME  2
 #define OMEMO_ADD_MSG_BOTH 3
+
+#define OMEMO_STRIP_ALL  1
+#define OMEMO_STRIP_NONE 0
 
 #define omemo_devicelist_list_data(X) (*((uint32_t *) X->data))
 
@@ -393,12 +395,12 @@ int omemo_message_create(uint32_t sender_device_id, const omemo_crypto_provider 
 /**
  * Strips the message of XEP-0071: XHTML-IM <html> nodes, and additional <body> nodes which are valid
  * through different values for the xml:lang attribute.
- * Leaks plaintext if this is not done one way or the other!
+ * Leaks plaintext if this is not done one way or the other and the clients supports these!
  *
  * @param msg_p Pointer to the omemo_message to strip of possible additional plaintext.
  * @return 0 on success, negative on error.
  */
-int omemo_message_strip_additional_bodys(omemo_message * msg_p);
+int omemo_message_strip_possible_plaintext(omemo_message * msg_p);
 
 /**
  * Prepares an intercepted <message> stanza for encryption.
@@ -408,10 +410,11 @@ int omemo_message_strip_additional_bodys(omemo_message * msg_p);
  * @param outgoing_message The intercepted <message> stanza.
  * @param sender_device_id The own device ID.
  * @param crypto_p Pointer to a crypto provider.
+ * @param strip Either OMEMO_STRIP_ALL or OMEMO_STRIP_NONE. If the former, applies omemo_message_strip_possible_plaintext().
  * @param message_pp Will be set to a pointer to the message struct.
  * @return 0 on success, negative on error.
  */
-int omemo_message_prepare_encryption(char * outgoing_message, uint32_t sender_device_id, const omemo_crypto_provider * crypto_p, omemo_message ** message_pp);
+int omemo_message_prepare_encryption(char * outgoing_message, uint32_t sender_device_id, const omemo_crypto_provider * crypto_p, int strip, omemo_message ** message_pp);
 
 /**
  * Gets the symmetric encryption key from the message struct so that it can be encrypted with the Signal session.

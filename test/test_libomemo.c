@@ -685,12 +685,12 @@ void test_message_prepare_encryption(void ** state) {
   uint32_t sid = 1337;
 
   omemo_message * msg_p;
-  assert_int_equal(omemo_message_prepare_encryption((void *) 0, sid, (void *) 0, (void *) 0), OMEMO_ERR_NULL);
-  assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, (void *) 0, (void *) 0), OMEMO_ERR_NULL);
-  assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, &crypto, (void *) 0), OMEMO_ERR_NULL);
-  assert_int_equal(omemo_message_prepare_encryption("asdf", sid, &crypto, &msg_p), OMEMO_ERR_MALFORMED_XML);
+  assert_int_equal(omemo_message_prepare_encryption((void *) 0, sid, (void *) 0, OMEMO_STRIP_NONE, (void *) 0), OMEMO_ERR_NULL);
+  assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, (void *) 0, OMEMO_STRIP_NONE, (void *) 0), OMEMO_ERR_NULL);
+  assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, &crypto, OMEMO_STRIP_NONE, (void *) 0), OMEMO_ERR_NULL);
+  assert_int_equal(omemo_message_prepare_encryption("asdf", sid, &crypto, OMEMO_STRIP_NONE, &msg_p), OMEMO_ERR_MALFORMED_XML);
 
-  assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, &crypto, &msg_p), 0);
+  assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, &crypto, OMEMO_STRIP_NONE, &msg_p), 0);
 
   assert_ptr_not_equal(msg_p, (void *) 0);
   assert_ptr_not_equal(msg_p->message_node_p, (void *) 0);
@@ -722,7 +722,7 @@ void test_message_prepare_encryption_with_extra_data(void ** state) {
   uint32_t sid = 1337;
 
   omemo_message * msg_p;
-  assert_int_equal(omemo_message_prepare_encryption(msg_out_extra, sid, &crypto, &msg_p), 0);
+  assert_int_equal(omemo_message_prepare_encryption(msg_out_extra, sid, &crypto, OMEMO_STRIP_NONE, &msg_p), 0);
 
   assert_ptr_not_equal(msg_p, (void *) 0);
   assert_ptr_not_equal(msg_p->message_node_p, (void *) 0);
@@ -753,7 +753,7 @@ void test_message_get_key(void ** state) {
   uint32_t sid = 1234;
 
   omemo_message * msg_p;
-  assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, &crypto, &msg_p), 0);
+  assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, &crypto, OMEMO_STRIP_NONE, &msg_p), 0);
   assert_ptr_not_equal(omemo_message_get_key(msg_p), (void *) 0);
 
   assert_int_equal(omemo_message_get_key_len(msg_p), OMEMO_AES_128_KEY_LENGTH);
@@ -821,7 +821,7 @@ void test_message_add_recipient(void ** state) {
   uint32_t rid = 1234;
 
   omemo_message * msg_p;
-  assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, &crypto, &msg_p), 0);
+  assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, &crypto, OMEMO_STRIP_NONE, &msg_p), 0);
 
   assert_int_equal(omemo_message_add_recipient((void *) 0, rid, (void *) 0, 0), OMEMO_ERR_NULL);
   assert_int_equal(omemo_message_add_recipient(msg_p, rid, (void *) 0, 0), OMEMO_ERR_NULL);
@@ -852,7 +852,7 @@ void test_message_export_encrypted(void ** state) {
   uint32_t rid = 1234;
 
   omemo_message * msg_p;
-  assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, &crypto, &msg_p), 0);
+  assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, &crypto, OMEMO_STRIP_NONE, &msg_p), 0);
   assert_int_equal(omemo_message_add_recipient(msg_p, rid, &data[0], 4), 0);
 
   char * xml;
@@ -889,7 +889,7 @@ void test_message_export_encrypted_with_extra_tags_and_body(void ** state) {
   uint32_t rid = 1234;
 
   omemo_message * msg_p;
-  assert_int_equal(omemo_message_prepare_encryption(msg_out_extra, sid, &crypto, &msg_p), 0);
+  assert_int_equal(omemo_message_prepare_encryption(msg_out_extra, sid, &crypto, OMEMO_STRIP_NONE, &msg_p), 0);
   assert_int_equal(omemo_message_add_recipient(msg_p, rid, &data[0], 4), 0);
 
   char * xml;
@@ -942,10 +942,10 @@ void test_message_export_encrypted_strip_xhtml(void ** state) {
   uint32_t rid = 1234;
 
   omemo_message * msg_p;
-  assert_int_equal(omemo_message_prepare_encryption(msg_html, sid, &crypto, &msg_p), 0);
+  assert_int_equal(omemo_message_prepare_encryption(msg_html, sid, &crypto, OMEMO_STRIP_NONE, &msg_p), 0);
   assert_int_equal(omemo_message_add_recipient(msg_p, rid, &data[0], 4), 0);
 
-  assert_int_equal(omemo_message_strip_additional_bodys(msg_p), 0);
+  assert_int_equal(omemo_message_strip_possible_plaintext(msg_p), 0);
 
   char * xml;
   assert_int_equal(omemo_message_export_encrypted(msg_p, OMEMO_ADD_MSG_BODY, &xml), 0);
@@ -975,10 +975,10 @@ void test_message_export_encrypted_strip_multiple_body(void ** state) {
   uint32_t rid = 1234;
 
   omemo_message * msg_p;
-  assert_int_equal(omemo_message_prepare_encryption(msg_mult_bodies, sid, &crypto, &msg_p), 0);
+  assert_int_equal(omemo_message_prepare_encryption(msg_mult_bodies, sid, &crypto, OMEMO_STRIP_NONE, &msg_p), 0);
   assert_int_equal(omemo_message_add_recipient(msg_p, rid, &data[0], 4), 0);
 
-  assert_int_equal(omemo_message_strip_additional_bodys(msg_p), 0);
+  assert_int_equal(omemo_message_strip_possible_plaintext(msg_p), 0);
 
   char * xml;
   assert_int_equal(omemo_message_export_encrypted(msg_p, OMEMO_ADD_MSG_NONE, &xml), 0);
@@ -1015,10 +1015,10 @@ void test_message_export_encrypted_strip_xhtml_and_body(void ** state) {
   uint32_t rid = 1234;
 
   omemo_message * msg_p;
-  assert_int_equal(omemo_message_prepare_encryption(msg_double_everything, sid, &crypto, &msg_p), 0);
+  assert_int_equal(omemo_message_prepare_encryption(msg_double_everything, sid, &crypto, OMEMO_STRIP_NONE, &msg_p), 0);
   assert_int_equal(omemo_message_add_recipient(msg_p, rid, &data[0], 4), 0);
 
-  assert_int_equal(omemo_message_strip_additional_bodys(msg_p), 0);
+  assert_int_equal(omemo_message_strip_possible_plaintext(msg_p), 0);
 
   char * xml;
   assert_int_equal(omemo_message_export_encrypted(msg_p, OMEMO_ADD_MSG_NONE, &xml), 0);
@@ -1045,7 +1045,7 @@ void test_message_export_encrypted_with_eme(void ** state) {
   uint32_t rid = 1234;
 
   omemo_message * msg_p;
-  assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, &crypto, &msg_p), 0);
+  assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, &crypto, OMEMO_STRIP_NONE, &msg_p), 0);
   assert_int_equal(omemo_message_add_recipient(msg_p, rid, &data[0], 4), 0);
 
   char * xml;
@@ -1088,7 +1088,7 @@ void test_message_encrypt_decrypt(void ** state) {
   uint32_t rid = 1234;
 
   omemo_message * msg_out_p;
-  assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, &crypto, &msg_out_p), 0);
+  assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, &crypto, OMEMO_STRIP_NONE, &msg_out_p), 0);
 
   const uint8_t * key_p = omemo_message_get_key(msg_out_p);
 
@@ -1140,7 +1140,7 @@ void test_message_encrypt_decrypt_with_extra_nodes(void ** state) {
   uint32_t rid = 1234;
 
   omemo_message * msg_out_p;
-  assert_int_equal(omemo_message_prepare_encryption(msg_out_extra, sid, &crypto, &msg_out_p), 0);
+  assert_int_equal(omemo_message_prepare_encryption(msg_out_extra, sid, &crypto, OMEMO_STRIP_NONE, &msg_out_p), 0);
 
   const uint8_t * key_p = omemo_message_get_key(msg_out_p);
 
@@ -1195,7 +1195,7 @@ void test_message_encrypt_decrypt_with_added_body(void ** state) {
   uint32_t rid = 1234;
 
   omemo_message * msg_out_p;
-  assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, &crypto, &msg_out_p), 0);
+  assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, &crypto, OMEMO_STRIP_NONE, &msg_out_p), 0);
 
   const uint8_t * key_p = omemo_message_get_key(msg_out_p);
 
@@ -1236,7 +1236,7 @@ void test_message_encrypt_decrypt_with_added_eme(void ** state) {
   uint32_t rid = 1234;
 
   omemo_message * msg_out_p;
-  assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, &crypto, &msg_out_p), 0);
+  assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, &crypto, OMEMO_STRIP_NONE, &msg_out_p), 0);
 
   const uint8_t * key_p = omemo_message_get_key(msg_out_p);
 
@@ -1279,7 +1279,7 @@ void test_message_export_decrypted_with_encrypted_tag(void ** state) {
   (void) state;
 
   omemo_message * msg_out_p;
-  assert_int_equal(omemo_message_prepare_encryption(msg_out, 1234, &crypto, &msg_out_p), 0);
+  assert_int_equal(omemo_message_prepare_encryption(msg_out, 1234, &crypto, OMEMO_STRIP_NONE, &msg_out_p), 0);
 
   const uint8_t * key_p = omemo_message_get_key(msg_out_p);
   const char * payload_b64 = mxmlGetOpaque(msg_out_p->payload_node_p);
@@ -1316,7 +1316,7 @@ void test_message_get_names(void ** state) {
                "</message>";
 
   omemo_message * msg_p;
-  assert_int_equal(omemo_message_prepare_encryption(msg, 1337, &crypto, &msg_p), 0);
+  assert_int_equal(omemo_message_prepare_encryption(msg, 1337, &crypto, OMEMO_STRIP_NONE, &msg_p), 0);
   assert_string_equal(omemo_message_get_sender_name_full(msg_p), "alice@example.com/hurr");
   assert_string_equal(omemo_message_get_sender_name_bare(msg_p), "alice@example.com");
   assert_string_equal(omemo_message_get_recipient_name_full(msg_p), "bob@example.com");

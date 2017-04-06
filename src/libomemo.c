@@ -1024,7 +1024,7 @@ cleanup:
   return ret_val;
 }
 
-int omemo_message_strip_additional_bodys(omemo_message * msg_p) {
+int omemo_message_strip_possible_plaintext(omemo_message * msg_p) {
   if (!msg_p) {
     return OMEMO_ERR_NULL;
   }
@@ -1046,7 +1046,7 @@ int omemo_message_strip_additional_bodys(omemo_message * msg_p) {
   return ret_val;
 }
 
-int omemo_message_prepare_encryption(char * outgoing_message, uint32_t sender_device_id, const omemo_crypto_provider * crypto_p, omemo_message ** message_pp) {
+int omemo_message_prepare_encryption(char * outgoing_message, uint32_t sender_device_id, const omemo_crypto_provider * crypto_p, int strip, omemo_message ** message_pp) {
   if (!outgoing_message || !crypto_p || !crypto_p->random_bytes_func || !crypto_p->aes_gcm_encrypt_func || !message_pp) {
     return OMEMO_ERR_NULL;
   }
@@ -1120,6 +1120,10 @@ int omemo_message_prepare_encryption(char * outgoing_message, uint32_t sender_de
   payload_node_p = mxmlNewElement(MXML_NO_PARENT, PAYLOAD_NODE_NAME);
   (void) mxmlNewOpaque(payload_node_p, payload_b64);
   msg_p->payload_node_p = payload_node_p;
+
+  if (strip == OMEMO_STRIP_ALL) {
+    omemo_message_strip_possible_plaintext(msg_p);
+  }
 
   *message_pp = msg_p;
 
