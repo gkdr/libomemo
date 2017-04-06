@@ -756,7 +756,7 @@ void test_message_get_key(void ** state) {
   assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, &crypto, OMEMO_STRIP_NONE, &msg_p), 0);
   assert_ptr_not_equal(omemo_message_get_key(msg_p), (void *) 0);
 
-  assert_int_equal(omemo_message_get_key_len(msg_p), OMEMO_AES_128_KEY_LENGTH);
+  assert_int_equal(omemo_message_get_key_len(msg_p), OMEMO_AES_128_KEY_LENGTH + OMEMO_AES_GCM_TAG_LENGTH);
 
   omemo_message_destroy(msg_p);
 }
@@ -1116,7 +1116,7 @@ void test_message_encrypt_decrypt(void ** state) {
   uint8_t * key_retrieved_p;
   size_t key_retrieved_len;
   assert_int_equal(omemo_message_get_encrypted_key(msg_in_p, rid, &key_retrieved_p, &key_retrieved_len), 0);
-  assert_int_equal(key_retrieved_len, OMEMO_AES_128_KEY_LENGTH);
+  assert_int_equal(key_retrieved_len, OMEMO_AES_128_KEY_LENGTH + OMEMO_AES_GCM_TAG_LENGTH);
   assert_memory_equal(key_p, key_retrieved_p, key_retrieved_len);
 
   char * xml_in;
@@ -1171,7 +1171,7 @@ void test_message_encrypt_decrypt_with_extra_nodes(void ** state) {
   uint8_t * key_retrieved_p;
   size_t key_retrieved_len;
   assert_int_equal(omemo_message_get_encrypted_key(msg_in_p, rid, &key_retrieved_p, &key_retrieved_len), 0);
-  assert_int_equal(key_retrieved_len, OMEMO_AES_128_KEY_LENGTH);
+  assert_int_equal(key_retrieved_len, OMEMO_AES_128_KEY_LENGTH + OMEMO_AES_GCM_TAG_LENGTH);
   assert_memory_equal(key_p, key_retrieved_p, key_retrieved_len);
 
   char * xml_in;
@@ -1212,7 +1212,7 @@ void test_message_encrypt_decrypt_with_added_body(void ** state) {
   uint8_t * key_retrieved_p;
   size_t key_retrieved_len;
   assert_int_equal(omemo_message_get_encrypted_key(msg_in_p, rid, &key_retrieved_p, &key_retrieved_len), 0);
-  assert_int_equal(key_retrieved_len, OMEMO_AES_128_KEY_LENGTH);
+  assert_int_equal(key_retrieved_len, OMEMO_AES_128_KEY_LENGTH + OMEMO_AES_GCM_TAG_LENGTH);
   assert_memory_equal(key_p, key_retrieved_p, key_retrieved_len);
 
   char * xml_in;
@@ -1253,7 +1253,7 @@ void test_message_encrypt_decrypt_with_added_eme(void ** state) {
   uint8_t * key_retrieved_p;
   size_t key_retrieved_len;
   assert_int_equal(omemo_message_get_encrypted_key(msg_in_p, rid, &key_retrieved_p, &key_retrieved_len), 0);
-  assert_int_equal(key_retrieved_len, OMEMO_AES_128_KEY_LENGTH);
+  assert_int_equal(key_retrieved_len, OMEMO_AES_128_KEY_LENGTH + OMEMO_AES_GCM_TAG_LENGTH);
   assert_memory_equal(key_p, key_retrieved_p, key_retrieved_len);
 
   char * xml_in;
@@ -1271,41 +1271,6 @@ void test_message_encrypt_decrypt_with_added_eme(void ** state) {
   free(xml_out);
   free(xml_in);
   free(key_retrieved_p);
-}
-
-
-
-void test_message_export_decrypted_with_encrypted_tag(void ** state) {
-  (void) state;
-
-  omemo_message * msg_out_p;
-  assert_int_equal(omemo_message_prepare_encryption(msg_out, 1234, &crypto, OMEMO_STRIP_NONE, &msg_out_p), 0);
-
-  const uint8_t * key_p = omemo_message_get_key(msg_out_p);
-  const char * payload_b64 = mxmlGetOpaque(msg_out_p->payload_node_p);
-  assert_ptr_not_equal(payload_b64, (void *) 0);
-
-  size_t payload_len;
-  uint8_t * payload_p = g_base64_decode(payload_b64, &payload_len);
-
-  uint8_t * key_w_tag_p = malloc(OMEMO_AES_128_KEY_LENGTH + OMEMO_AES_GCM_TAG_LENGTH);
-  assert_ptr_not_equal(key_w_tag_p, (void *) 0);
-  memcpy(key_w_tag_p, key_p, OMEMO_AES_128_KEY_LENGTH);
-  memcpy(key_w_tag_p + OMEMO_AES_128_KEY_LENGTH, payload_p + payload_len - OMEMO_AES_GCM_TAG_LENGTH, OMEMO_AES_GCM_TAG_LENGTH);
-
-  char * payload_b64_new = g_base64_encode(payload_p, payload_len - OMEMO_AES_GCM_TAG_LENGTH);
-  assert_int_equal(mxmlSetOpaque(msg_out_p->payload_node_p, payload_b64_new), 0);
-
-  char * xml;
-  assert_int_equal(omemo_message_export_encrypted(msg_out_p, OMEMO_ADD_MSG_NONE, &xml), 0);
-
-  omemo_message * msg_in_p;
-  assert_int_equal(omemo_message_prepare_decryption(xml, &msg_in_p), 0);
-  assert_int_equal(omemo_message_export_decrypted(msg_in_p, key_w_tag_p, OMEMO_AES_128_KEY_LENGTH + OMEMO_AES_GCM_TAG_LENGTH, &crypto, &xml), 0);
-
-  mxml_node_t * msg_node_p = mxmlLoadString((void *) 0, xml, MXML_OPAQUE_CALLBACK);
-  assert_ptr_not_equal(msg_node_p, (void *) 0);
-  assert_string_equal(mxmlGetOpaque(mxmlGetFirstChild(msg_node_p)), "hello");
 }
 
 void test_message_get_names(void ** state) {
@@ -1371,7 +1336,6 @@ int main(void) {
       cmocka_unit_test(test_message_encrypt_decrypt_with_extra_nodes),
       cmocka_unit_test(test_message_encrypt_decrypt_with_added_body),
       cmocka_unit_test(test_message_encrypt_decrypt_with_added_eme),
-      cmocka_unit_test(test_message_export_decrypted_with_encrypted_tag),
       cmocka_unit_test(test_message_get_names)
   };
 

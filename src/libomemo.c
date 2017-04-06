@@ -99,6 +99,7 @@ struct omemo_message {
   size_t key_len;
   uint8_t * iv_p;
   size_t iv_len;
+  size_t tag_len; //tag is appended to key buf, i.e. tag_p = key_p + key_len
 };
 
 /**
@@ -1004,12 +1005,14 @@ int omemo_message_create(uint32_t sender_device_id, const omemo_crypto_provider 
   (void) mxmlNewOpaque(iv_node_p, iv_b64);
   msg_p->header_node_p = header_node_p;
 
-  ret_val = crypto_p->random_bytes_func(&key_p, OMEMO_AES_128_KEY_LENGTH, crypto_p->user_data_p);
+  ret_val = crypto_p->random_bytes_func(&key_p, OMEMO_AES_128_KEY_LENGTH + OMEMO_AES_GCM_TAG_LENGTH, crypto_p->user_data_p);
   if (ret_val) {
     goto cleanup;
   }
+
   msg_p->key_p = key_p;
   msg_p->key_len = OMEMO_AES_128_KEY_LENGTH;
+  msg_p->tag_len = 0;
 
   *message_pp = msg_p;
 
@@ -1058,13 +1061,13 @@ int omemo_message_prepare_encryption(char * outgoing_message, uint32_t sender_de
   mxml_node_t * body_node_p = (void *) 0;
   const char * msg_text = (void *) 0;
 
-  uint8_t * tag_p = (void *) 0;
   uint8_t * ct_p = (void *) 0;
   size_t ct_len = 0;
 
-  uint8_t * payload_p = (void *) 0;
   gchar * payload_b64 = (void *) 0;
   mxml_node_t * payload_node_p = (void *) 0;
+
+  uint8_t * tag_p = (void *) 0;
 
   ret_val = omemo_message_create(sender_device_id, crypto_p, &msg_p);
   if (ret_val) {
@@ -1101,6 +1104,9 @@ int omemo_message_prepare_encryption(char * outgoing_message, uint32_t sender_de
     goto cleanup;
   }
 
+  msg_p->tag_len = OMEMO_AES_GCM_TAG_LENGTH;
+  memcpy(msg_p->key_p + msg_p->key_len, tag_p, msg_p->tag_len);
+
   ret_val = expect_next_node(body_node_p, mxmlGetParent, BODY_NODE_NAME, &body_node_p);
   if (ret_val) {
     goto cleanup;
@@ -1108,15 +1114,7 @@ int omemo_message_prepare_encryption(char * outgoing_message, uint32_t sender_de
 
   mxmlRemove(body_node_p);
 
-  payload_p = malloc(sizeof(uint8_t) * (ct_len + OMEMO_AES_GCM_TAG_LENGTH));
-  if (!payload_p) {
-    ret_val = OMEMO_ERR_NOMEM;
-    goto cleanup;
-  }
-  memcpy(payload_p, ct_p, ct_len);
-  memcpy(payload_p + ct_len, tag_p, OMEMO_AES_GCM_TAG_LENGTH);
-
-  payload_b64 = g_base64_encode(payload_p, ct_len + OMEMO_AES_GCM_TAG_LENGTH);
+  payload_b64 = g_base64_encode(ct_p, ct_len);
   payload_node_p = mxmlNewElement(MXML_NO_PARENT, PAYLOAD_NODE_NAME);
   (void) mxmlNewOpaque(payload_node_p, payload_b64);
   msg_p->payload_node_p = payload_node_p;
@@ -1132,10 +1130,9 @@ cleanup:
     omemo_message_destroy(msg_p);
   }
 
-  free(payload_p);
-  free(tag_p);
   free(ct_p);
   g_free(payload_b64);
+  free(tag_p);
 
   return ret_val;
 }
@@ -1145,7 +1142,7 @@ const uint8_t * omemo_message_get_key(omemo_message * msg_p) {
 }
 
 size_t omemo_message_get_key_len(omemo_message * msg_p) {
-  return msg_p->key_len;
+  return msg_p->key_len + msg_p->tag_len;
 }
 
 int omemo_message_add_recipient(omemo_message * msg_p, uint32_t device_id, const uint8_t * encrypted_key_p, size_t key_len) {

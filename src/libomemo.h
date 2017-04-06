@@ -417,8 +417,10 @@ int omemo_message_strip_possible_plaintext(omemo_message * msg_p);
 int omemo_message_prepare_encryption(char * outgoing_message, uint32_t sender_device_id, const omemo_crypto_provider * crypto_p, int strip, omemo_message ** message_pp);
 
 /**
- * Gets the symmetric encryption key from the message struct so that it can be encrypted with the Signal session.
- * Naturally it is only there in an outgoing message.
+ * Gets the symmetric encryption key and appended authentication tag from the message struct
+ * so that both can be encrypted with the Signal session.
+ *
+ * Naturally only exists in an outgoing message.
  *
  * @param msg_p Pointer to the message struct.
  * @return Pointer to the key data, or null if it does not exist.
@@ -426,12 +428,14 @@ int omemo_message_prepare_encryption(char * outgoing_message, uint32_t sender_de
 const uint8_t * omemo_message_get_key(omemo_message * msg_p);
 
 /**
- * Gets the length of the symmetric key.
+ * Gets the length of the symmetric key and appended tag.
  * Again, this only makes sense on an outgoing message.
- * At the moment, the length is fixed to 16 (128 bits).
+ *
+ * At the moment, the length is fixed to 16 (128 bits) for the key, and another 16 for the tag.
+ * In a KeyTransportElement, no tag exists.
  *
  * @param msg_p Pointer to the message struct.
- * @return Length of the key in bytes.
+ * @return Length of the key + tag in bytes.
  */
 size_t omemo_message_get_key_len(omemo_message * msg_p);
 
