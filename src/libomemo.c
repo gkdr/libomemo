@@ -1024,6 +1024,28 @@ cleanup:
   return ret_val;
 }
 
+int omemo_message_strip_additional_bodys(omemo_message * msg_p) {
+  if (!msg_p) {
+    return OMEMO_ERR_NULL;
+  }
+
+  int ret_val = 0;
+  mxml_node_t * bad_node_p = (void *) 0;
+
+  bad_node_p = mxmlFindElement(msg_p->message_node_p, msg_p->message_node_p, "html", NULL, NULL, MXML_DESCEND_FIRST);
+  if (bad_node_p) {
+    mxmlDelete(bad_node_p);
+  }
+
+  for (bad_node_p = mxmlFindElement(msg_p->message_node_p, msg_p->message_node_p, "body", NULL, NULL, MXML_DESCEND_FIRST);
+       bad_node_p;
+       bad_node_p = mxmlFindElement(msg_p->message_node_p, msg_p->message_node_p, "body", NULL, NULL, MXML_DESCEND_FIRST)) {
+    mxmlDelete(bad_node_p);
+  }
+
+  return ret_val;
+}
+
 int omemo_message_prepare_encryption(char * outgoing_message, uint32_t sender_device_id, const omemo_crypto_provider * crypto_p, omemo_message ** message_pp) {
   if (!outgoing_message || !crypto_p || !crypto_p->random_bytes_func || !crypto_p->aes_gcm_encrypt_func || !message_pp) {
     return OMEMO_ERR_NULL;

@@ -391,6 +391,16 @@ void omemo_devicelist_destroy(omemo_devicelist * dl_p);
 int omemo_message_create(uint32_t sender_device_id, const omemo_crypto_provider * crypto_p, omemo_message ** message_pp);
 
 /**
+ * Strips the message of XEP-0071: XHTML-IM <html> nodes, and additional <body> nodes which are valid
+ * through different values for the xml:lang attribute.
+ * Leaks plaintext if this is not done one way or the other!
+ *
+ * @param msg_p Pointer to the omemo_message to strip of possible additional plaintext.
+ * @return 0 on success, negative on error.
+ */
+int omemo_message_strip_additional_bodys(omemo_message * msg_p);
+
+/**
  * Prepares an intercepted <message> stanza for encryption.
  * This means it removes the <body> and encrypts the contained text, leaving everything else as it is.
  * Recipient devices have to be added to the resulting struct before it is exported back to xml.

@@ -926,6 +926,118 @@ void test_message_export_encrypted_with_extra_tags_and_body(void ** state) {
   omemo_message_destroy(msg_p);
 }
 
+void test_message_export_encrypted_strip_xhtml(void ** state) {
+  (void) state;
+
+  char * msg_html = "<message xmlns='jabber:client' type='chat' to='bob@example.com'>"
+                      "<body>hello</body>"
+                        "<html xmlns='http://jabber.org/protocol/xhtml-im'>"
+                          "<body xmlns='http://www.w3.org/1999/xhtml'>"
+                            "<p style='font-weight:bold'>hello</p>"
+                          "</body>"
+                        "</html>"
+                   "</message>";
+
+  uint32_t sid = 4321;
+  uint32_t rid = 1234;
+
+  omemo_message * msg_p;
+  assert_int_equal(omemo_message_prepare_encryption(msg_html, sid, &crypto, &msg_p), 0);
+  assert_int_equal(omemo_message_add_recipient(msg_p, rid, &data[0], 4), 0);
+
+  assert_int_equal(omemo_message_strip_additional_bodys(msg_p), 0);
+
+  char * xml;
+  assert_int_equal(omemo_message_export_encrypted(msg_p, OMEMO_ADD_MSG_BODY, &xml), 0);
+
+  mxml_node_t * message_node_p = mxmlLoadString((void *) 0, xml, MXML_OPAQUE_CALLBACK);
+  assert_ptr_not_equal(message_node_p, (void *) 0);
+  assert_string_equal(mxmlGetElement(message_node_p), "message");
+
+  mxml_node_t * html_node_p = mxmlFindElement(message_node_p, message_node_p, "html", NULL, NULL, MXML_DESCEND_FIRST);
+  assert_ptr_equal(html_node_p, NULL);
+
+  mxmlDelete(message_node_p);
+  free(xml);
+  omemo_message_destroy(msg_p);
+}
+
+void test_message_export_encrypted_strip_multiple_body(void ** state) {
+  (void) state;
+
+  char * msg_mult_bodies = "<message xmlns='jabber:client' type='chat' to='bob@example.com'>"
+                              "<body xml:lang='en-US'>hello</body>"
+                              "<body xml:lang='de-DE'>hallo</body>"
+                              "<body xml:lang='es-ES'>hola</body>"
+                           "</message>";
+
+  uint32_t sid = 4321;
+  uint32_t rid = 1234;
+
+  omemo_message * msg_p;
+  assert_int_equal(omemo_message_prepare_encryption(msg_mult_bodies, sid, &crypto, &msg_p), 0);
+  assert_int_equal(omemo_message_add_recipient(msg_p, rid, &data[0], 4), 0);
+
+  assert_int_equal(omemo_message_strip_additional_bodys(msg_p), 0);
+
+  char * xml;
+  assert_int_equal(omemo_message_export_encrypted(msg_p, OMEMO_ADD_MSG_NONE, &xml), 0);
+
+  mxml_node_t * message_node_p = mxmlLoadString((void *) 0, xml, MXML_OPAQUE_CALLBACK);
+  assert_ptr_not_equal(message_node_p, (void *) 0);
+  assert_string_equal(mxmlGetElement(message_node_p), "message");
+
+  mxml_node_t * body_node_p = mxmlFindElement(message_node_p, message_node_p, "body", NULL, NULL, MXML_DESCEND_FIRST);
+  assert_ptr_equal(body_node_p, NULL);
+
+  mxmlDelete(message_node_p);
+  free(xml);
+  omemo_message_destroy(msg_p);
+}
+
+void test_message_export_encrypted_strip_xhtml_and_body(void ** state) {
+  (void) state;
+
+  char * msg_double_everything =  "<message xmlns='jabber:client' type='chat' to='bob@example.com'>"
+                                    "<body xml:lang='en-US'>hello</body>"
+                                    "<body xml:lang='de-DE'>hallo</body>"
+                                    "<html xmlns='http://jabber.org/protocol/xhtml-im'>"
+                                      "<body xml:lang='en-US' xmlns='http://www.w3.org/1999/xhtml'>"
+                                        "<p style='font-weight:bold'>hello</p>"
+                                      "</body>"
+                                      "<body xml:lang='de-DE' xmlns='http://www.w3.org/1999/xhtml'>"
+                                        "<p style='font-weight:bold'>hallo</p>"
+                                      "</body>"
+                                    "</html>"
+                                   "</message>";
+
+  uint32_t sid = 4321;
+  uint32_t rid = 1234;
+
+  omemo_message * msg_p;
+  assert_int_equal(omemo_message_prepare_encryption(msg_double_everything, sid, &crypto, &msg_p), 0);
+  assert_int_equal(omemo_message_add_recipient(msg_p, rid, &data[0], 4), 0);
+
+  assert_int_equal(omemo_message_strip_additional_bodys(msg_p), 0);
+
+  char * xml;
+  assert_int_equal(omemo_message_export_encrypted(msg_p, OMEMO_ADD_MSG_NONE, &xml), 0);
+
+  mxml_node_t * message_node_p = mxmlLoadString((void *) 0, xml, MXML_OPAQUE_CALLBACK);
+  assert_ptr_not_equal(message_node_p, (void *) 0);
+  assert_string_equal(mxmlGetElement(message_node_p), "message");
+
+  mxml_node_t * html_node_p = mxmlFindElement(message_node_p, message_node_p, "html", NULL, NULL, MXML_DESCEND_FIRST);
+  assert_ptr_equal(html_node_p, NULL);
+
+  mxml_node_t * body_node_p = mxmlFindElement(message_node_p, message_node_p, "body", NULL, NULL, MXML_DESCEND_FIRST);
+  assert_ptr_equal(body_node_p, NULL);
+
+  mxmlDelete(message_node_p);
+  free(xml);
+  omemo_message_destroy(msg_p);
+}
+
 void test_message_export_encrypted_with_eme(void ** state) {
   (void) state;
 
@@ -1250,6 +1362,9 @@ int main(void) {
       cmocka_unit_test(test_message_get_encrypted_key_no_keys),
       cmocka_unit_test(test_message_add_recipient),
       cmocka_unit_test(test_message_export_encrypted),
+      cmocka_unit_test(test_message_export_encrypted_strip_xhtml),
+      cmocka_unit_test(test_message_export_encrypted_strip_multiple_body),
+      cmocka_unit_test(test_message_export_encrypted_strip_xhtml_and_body),
       cmocka_unit_test(test_message_export_encrypted_with_extra_tags_and_body),
       cmocka_unit_test(test_message_export_encrypted_with_eme),
       cmocka_unit_test(test_message_encrypt_decrypt),
