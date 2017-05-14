@@ -3,11 +3,21 @@
 CC ?= gcc
 AR ?= ar
 LIBTOOL ?= libtool
-PKG_CONFIG ?= pkg-config
-LIBGCRYPT_CONFIG ?= libgcrypt-config
 MKDIR = mkdir
 MKDIR_P = mkdir -p
 
+PKG_CONFIG ?= pkg-config
+GLIB_CFLAGS ?= $(shell $(PKG_CONFIG) --cflags glib-2.0)
+GLIB_LDFLAGS ?= $(shell $(PKG_CONFIG) --libs glib-2.0)
+
+SQLITE3_CFLAGS ?= $(shell $(PKG_CONFIG) --cflags sqlite3)
+SQLITE3_LDFLAGS ?= $(shell $(PKG_CONFIG) --libs sqlite3)
+
+MXML_CFLAGS ?= $(shell $(PKG_CONFIG) --cflags mxml)
+MXML_LDFLAGS ?= $(shell $(PKG_CONFIG) --libs mxml)
+
+LIBGCRYPT_CONFIG ?= libgcrypt-config
+LIBGCRYPT_LDFLAGS ?= $(shell $(LIBGCRYPT_CONFIG) --libs)
 
 SDIR = src
 BDIR = build
@@ -18,10 +28,15 @@ LDIR = lib
 # -fno-builtin-memset is enough to make gcc not optimize it away
 FILES =
 
-PKGCFG_C=$(shell $(PKG_CONFIG) --cflags glib-2.0 sqlite3 mxml) \
-		 $(shell $(LIBGCRYPT_CONFIG) --cflags)
-PKGCFG_L=$(shell $(PKG_CONFIG) --libs glib-2.0 sqlite3 mxml) \
-		 $(shell $(LIBGCRYPT_CONFIG) --libs)
+PKGCFG_C=$(GLIB_CFLAGS) \
+	 $(MXML_CFLAGS) \
+	 $(SQLITE3_CFLAGS) \
+	 $(LIBGCRYPT_CFLAGS)
+
+PKGCFG_L=$(GLIB_LDFLAGS) \
+	 $(MXML_LDFLAGS) \
+	 $(SQLITE3_LDFLAGS) \
+	 $(LIBGCRYPT_LDFLAGS)
 
 CFLAGS += -std=c11 -Wall -Wextra -Wpedantic -Wstrict-overflow \
 		-fno-strict-aliasing -funsigned-char \
