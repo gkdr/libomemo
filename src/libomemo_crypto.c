@@ -49,6 +49,7 @@ int omemo_default_crypto_aes_gcm_encrypt( const uint8_t * plaintext_p, size_t pl
   }
 
   int ret_val = 0;
+  int hd_is_init = 0;
 
   int algo = 0;
   gcry_cipher_hd_t cipher_hd;
@@ -75,6 +76,7 @@ int omemo_default_crypto_aes_gcm_encrypt( const uint8_t * plaintext_p, size_t pl
     ret_val = -ret_val;
     goto cleanup;
   }
+  hd_is_init = 1;
 
   ret_val = gcry_cipher_setkey(cipher_hd, key_p, key_len);
   if (ret_val) {
@@ -121,7 +123,9 @@ cleanup:
     free(out_p);
     free(tag_p);
   }
-  gcry_cipher_close(cipher_hd);
+  if (hd_is_init) {
+    gcry_cipher_close(cipher_hd);
+  }
 
   return ret_val;
 }
@@ -139,6 +143,7 @@ int omemo_default_crypto_aes_gcm_decrypt( const uint8_t * ciphertext_p, size_t c
   }
 
   int ret_val = 0;
+  int hd_is_init = 0;
 
   int algo = 0;
   gcry_cipher_hd_t cipher_hd;
@@ -164,6 +169,7 @@ int omemo_default_crypto_aes_gcm_decrypt( const uint8_t * ciphertext_p, size_t c
     ret_val = -ret_val;
     goto cleanup;
   }
+  hd_is_init = 1;
 
   ret_val = gcry_cipher_setkey(cipher_hd, key_p, key_len);
   if (ret_val) {
@@ -203,7 +209,9 @@ cleanup:
     free(out_p);
   }
 
-  gcry_cipher_close(cipher_hd);
+  if (hd_is_init) {
+    gcry_cipher_close(cipher_hd);
+  }
 
   return ret_val;
 }
