@@ -52,7 +52,7 @@ int omemo_default_crypto_aes_gcm_encrypt( const uint8_t * plaintext_p, size_t pl
   int hd_is_init = 0;
 
   int algo = 0;
-  gcry_cipher_hd_t cipher_hd;
+  gcry_cipher_hd_t cipher_hd = NULL;
   uint8_t * out_p = (void *) 0;
   uint8_t * tag_p = (void *) 0;
 
@@ -146,7 +146,7 @@ int omemo_default_crypto_aes_gcm_decrypt( const uint8_t * ciphertext_p, size_t c
   int hd_is_init = 0;
 
   int algo = 0;
-  gcry_cipher_hd_t cipher_hd;
+  gcry_cipher_hd_t cipher_hd = NULL;
   uint8_t * out_p = (void *) 0;
 
   switch(key_len) {
