@@ -41,7 +41,7 @@ PKGCFG_L=$(GLIB_LDFLAGS) \
 CFLAGS += -std=c11 -Wall -Wextra -Wpedantic -Wstrict-overflow \
 		-fno-strict-aliasing -funsigned-char \
 		-fno-builtin-memset $(PKGCFG_C)
-CPPFLAGS += -D_XOPEN_SOURCE=700 -D_BSD_SOURCE
+CPPFLAGS += -D_XOPEN_SOURCE=700 -D_DEFAULT_SOURCE
 CFLAGS_CONVERSATIONS=$(CFLAGS) -DOMEMO_XMLNS='"eu.siacs.conversations.axolotl"' -DOMEMO_NS_SEPARATOR='"."' -DOMEMO_NS_NOVERSION
 COVFLAGS = --coverage -O0 -g $(CFLAGS)
 LDFLAGS += -pthread -ldl -lm $(PKGCFG_L)
