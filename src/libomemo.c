@@ -996,6 +996,7 @@ int omemo_message_create(uint32_t sender_device_id, const omemo_crypto_provider 
   iv_b64 = g_base64_encode(iv_p, OMEMO_AES_GCM_IV_LENGTH);
 
   if (int_to_string(sender_device_id, &device_id_string) <= 0) {
+    ret_val = -1;
     goto cleanup;
   }
   header_node_p = mxmlNewElement(MXML_NO_PARENT, HEADER_NODE_NAME);
