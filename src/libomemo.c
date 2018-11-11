@@ -110,15 +110,22 @@ struct omemo_message {
  * @return Returns the length on success, and negative on error.
  */
 static int int_to_string(uint32_t in, char ** out) {
-  size_t len = snprintf((void *) 0, 0, "%i", in);
-  size_t buf_len = len + 1;
-  char * int_string = malloc(buf_len);
+  int len;
+  size_t buf_len;
+  char * int_string;
+
+  len = snprintf((void *) 0, 0, "%i", in);
+  if (len < 0) {
+    return -1;
+  }
+  buf_len = len + 1;
+  int_string = malloc(buf_len);
   if (!int_string) {
     return OMEMO_ERR_NOMEM;
   }
   memset(int_string, 0, buf_len);
 
-  size_t result = snprintf(int_string, buf_len, "%i", in);
+  int result = snprintf(int_string, buf_len, "%i", in);
   if (result != len) {
     free(int_string);
     return -1;
@@ -170,7 +177,7 @@ int omemo_bundle_create(omemo_bundle ** bundle_pp) {
 int omemo_bundle_set_device_id(omemo_bundle * bundle_p, uint32_t device_id) {
   char * id_string = (void *) 0;
   int ret = int_to_string(device_id, &id_string);
-  if (ret < 0) {
+  if (ret <= 0) {
     return ret;
   }
 
