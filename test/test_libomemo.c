@@ -790,6 +790,35 @@ void test_message_get_encrypted_key(void ** state) {
   omemo_message_destroy(msg_p);
 }
 
+void test_message_get_encrypted_key_after_iv(void ** state) {
+  (void) state;
+
+  char * msg = "<message to='bob@example.com' from='alice@example.com'>"
+                 "<encrypted xmlns='urn:xmpp:omemo:0'>"
+                   "<header sid='1111'>"
+                     "<iv>BASE64ENCODED</iv>"
+                     "<key rid='2222'>sWsAtQ==</key>"
+                   "</header>"
+                   "<payload>BASE64ENCODED</payload>"
+                  "</encrypted>"
+                  "<store xmlns='urn:xmpp:hints'/>"
+                "</message>";
+
+  omemo_message * msg_p;
+  assert_int_equal(omemo_message_prepare_decryption(msg, &msg_p), 0);
+
+  uint8_t * key_p;
+  size_t key_len;
+  assert_int_equal(omemo_message_get_encrypted_key(msg_p, 1111, &key_p, &key_len), 0);
+  assert_ptr_equal(key_p, (void *) 0);
+
+  assert_int_equal(omemo_message_get_encrypted_key(msg_p, 2222, &key_p, &key_len), 0);
+  assert_int_equal(key_len, 4);
+  assert_memory_equal(key_p, data, key_len);
+
+  omemo_message_destroy(msg_p);
+}
+
 void test_message_get_encrypted_key_no_keys(void ** state) {
   (void) state;
 
@@ -1324,6 +1353,7 @@ int main(void) {
       cmocka_unit_test(test_message_prepare_encryption_with_extra_data),
       cmocka_unit_test(test_message_get_key),
       cmocka_unit_test(test_message_get_encrypted_key),
+      cmocka_unit_test(test_message_get_encrypted_key_after_iv),
       cmocka_unit_test(test_message_get_encrypted_key_no_keys),
       cmocka_unit_test(test_message_add_recipient),
       cmocka_unit_test(test_message_export_encrypted),

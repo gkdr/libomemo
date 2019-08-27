@@ -1364,9 +1364,9 @@ int omemo_message_get_encrypted_key(omemo_message * msg_p, uint32_t own_device_i
   const char * key_b64 = (void *) 0;
   size_t key_len = 0;
 
-
-  ret_val = expect_next_node(msg_p->header_node_p, mxmlGetFirstChild, KEY_NODE_NAME, &key_node_p);
-  if (ret_val) {
+  key_node_p = mxmlFindElement(msg_p->header_node_p, msg_p->header_node_p, KEY_NODE_NAME, NULL, NULL, MXML_DESCEND);
+  if (!key_node_p) {
+    // if there is not at least one key, skip the rest of the function
     ret_val = 0;
     *key_pp = (void *) 0;
     goto cleanup;
@@ -1376,6 +1376,7 @@ int omemo_message_get_encrypted_key(omemo_message * msg_p, uint32_t own_device_i
     ret_val = OMEMO_ERR_NOMEM;
     goto cleanup;
   }
+
 
   while (key_node_p) {
     if (!strncmp(rid_string, mxmlElementGetAttr(key_node_p, KEY_NODE_RID_ATTR_NAME), strlen(rid_string))) {
@@ -1438,8 +1439,9 @@ int omemo_message_export_decrypted(omemo_message * msg_p, uint8_t * key_p, size_
   }
   payload_p = g_base64_decode(payload_b64, &payload_len);
 
-  ret_val = expect_next_node(msg_p->header_node_p, mxmlGetLastChild, IV_NODE_NAME, &iv_node_p);
-  if (ret_val) {
+  iv_node_p = mxmlFindElement(msg_p->header_node_p, msg_p->header_node_p, IV_NODE_NAME, NULL, NULL, MXML_DESCEND);
+  if (!iv_node_p) {
+    ret_val = OMEMO_ERR_MALFORMED_XML;
     goto cleanup;
   }
 
