@@ -78,7 +78,7 @@ typedef struct omemo_crypto_provider {
 } omemo_crypto_provider;
 
 #define OMEMO_AES_128_KEY_LENGTH 16
-#define OMEMO_AES_GCM_IV_LENGTH  16
+#define OMEMO_AES_GCM_IV_LENGTH  12
 #define OMEMO_AES_GCM_TAG_LENGTH 16
 
 #define OMEMO_LOG_OFF    -1
