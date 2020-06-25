@@ -15,7 +15,7 @@ However, you can use my [axc](https://github.com/gkdr/axc) lib for that and easi
 
 Optional: 
 * For testing: [cmocka](https://cmocka.org/) (`make test`)
-* For the coverage report: [gcovr](https://cmocka.org/) (`make coverage`)
+* For the coverage report: [gcovr](https://gcovr.com/) (`make coverage`)
 
 I recommend to simply link it statically - the standard target is a is a static lib (containing PIC) which uses the _compatible_ namespace (i.e. not the one in the XEP). 
 
