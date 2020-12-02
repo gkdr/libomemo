@@ -8,7 +8,7 @@ MKDIR_P = mkdir -p
 
 ARCH = $(shell gcc -print-multiarch)
 VER_MAJ = 0
-VERSION = 0.6.2
+VERSION = 0.7.0
 
 PKG_CONFIG ?= pkg-config
 GLIB_CFLAGS ?= $(shell $(PKG_CONFIG) --cflags glib-2.0)
