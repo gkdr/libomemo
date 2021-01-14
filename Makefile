@@ -118,19 +118,19 @@ install: $(BDIR)
 test_libomemo: $(TDIR)/test_libomemo.c $(SDIR)/libomemo.c
 	$(CC) $(COVFLAGS) $<  $(FILES) -o $(TDIR)/$@.o $(TESTFLAGS)
 	-$(TDIR)/$@.o
-	mv *.g* $(TDIR)
+	find .  -maxdepth 1 -iname 'test*.g*' -exec mv {} $(TDIR) \;
 
 .PHONY: test_crypto
 test_crypto: $(TDIR)/test_crypto.c $(SDIR)/libomemo_crypto.c
 	$(CC) $(COVFLAGS) $<  $(FILES) -o $(TDIR)/$@.o $(TESTFLAGS)
 	-$(TDIR)/$@.o
-	mv *.g* $(TDIR)
+	find .  -maxdepth 1 -iname 'test*.g*' -exec mv {} $(TDIR) \;
 
 .PHONY: test_storage
 test_storage: $(TDIR)/test_storage.c $(SDIR)/libomemo_storage.c
 	$(CC) $(COVFLAGS) $< $(FILES) -o $(TDIR)/$@.o $(TESTFLAGS)
 	-$(TDIR)/$@.o
-	mv *.g* $(TDIR)
+	find .  -maxdepth 1 -iname 'test*.g*' -exec mv {} $(TDIR) \;
 
 .PHONY: test
 test : test_libomemo test_crypto test_storage
