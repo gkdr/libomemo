@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - The build now includes debug symbols.
-- Generated IVs for outgoing messages are now 12 bytes long. This should help compatibility with Monal. ([#24](https://github.com/gkdr/libomemo/issues/24)) (thanks, everyone!)
+- Generated IVs for outgoing messages are now 12 bytes long. This should help compatibility with Monal. ([#24](https://github.com/gkdr/libomemo/issues/24) + [#27](https://github.com/gkdr/libomemo/pull/27)) (thanks, [@Neustradamus](https://github.com/Neustradamus) and others!)
 
 ### Fixed
 - `omemo_message_create()` error handling ([#22](https://github.com/gkdr/libomemo/pull/22)) (thanks, [@msantos](https://github.com/msantos)!)
