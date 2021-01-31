@@ -1,4 +1,4 @@
-# libomemo 0.7.0
+# libomemo 0.7.1
 Implements [OMEMO](https://conversations.im/omemo/) ([XEP-0384](https://xmpp.org/extensions/xep-0384.html)) in C.
 
 Input and output are XML strings, so it does not force you to use a certain XML lib.
