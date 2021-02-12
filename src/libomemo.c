@@ -41,6 +41,7 @@
 #define ENCRYPTED_NODE_NAME "encrypted"
 #define HEADER_NODE_NAME "header"
 #define IV_NODE_NAME "iv"
+#define RECIPIENT_NODE_NAME "keys"
 #define KEY_NODE_NAME "key"
 #define PAYLOAD_NODE_NAME "payload"
 #define STORE_NODE_NAME "store"
@@ -61,7 +62,9 @@
 #define MESSAGE_NODE_FROM_ATTR_NAME "from"
 #define MESSAGE_NODE_TO_ATTR_NAME "to"
 #define HEADER_NODE_SID_ATTR_NAME "sid"
+#define RECIPIENT_NODE_JID_ATTR_NAME "jid"
 #define KEY_NODE_RID_ATTR_NAME "rid"
+#define KEY_NODE_KEX_ATTR_NAME "kex"
 #define PUBLISH_NODE_NODE_ATTR_NAME "node"
 #define SIGNED_PRE_KEY_NODE_ID_ATTR_NAME "signedPreKeyId"
 #define PRE_KEY_NODE_ID_ATTR_NAME "preKeyId"
@@ -1151,7 +1154,7 @@ size_t omemo_message_get_key_len(omemo_message * msg_p) {
   return msg_p->key_len + msg_p->tag_len;
 }
 
-int omemo_message_add_recipient(omemo_message * msg_p, uint32_t device_id, const uint8_t * encrypted_key_p, size_t key_len) {
+int omemo_message_add_recipient(omemo_message * msg_p, const char * recipient_name_bare, uint32_t device_id, const uint8_t * encrypted_key_p, size_t key_len, int kex) {
   if (!msg_p || !msg_p->header_node_p || !encrypted_key_p) {
     return OMEMO_ERR_NULL;
   }
@@ -1161,13 +1164,23 @@ int omemo_message_add_recipient(omemo_message * msg_p, uint32_t device_id, const
     return OMEMO_ERR;
   }
 
+  mxml_node_t * recipient_node_p = mxmlFindElement(msg_p->header_node_p, msg_p->header_node_p,
+						   RECIPIENT_NODE_NAME, RECIPIENT_NODE_JID_ATTR_NAME,
+						   recipient_name_bare, MXML_DESCEND);
+  if (!recipient_node_p) {
+    recipient_node_p = mxmlNewElement(MXML_NO_PARENT, RECIPIENT_NODE_NAME);
+    mxmlElementSetAttr(recipient_node_p, RECIPIENT_NODE_JID_ATTR_NAME, recipient_name_bare);
+    mxmlAdd(msg_p->header_node_p, MXML_ADD_BEFORE, MXML_ADD_TO_PARENT, recipient_node_p);
+  }
   gchar * key_b64 = g_base64_encode(encrypted_key_p, key_len);
-  mxml_node_t * key_node_p =  mxmlNewElement(MXML_NO_PARENT, KEY_NODE_NAME);
+  mxml_node_t * key_node_p = mxmlNewElement(MXML_NO_PARENT, KEY_NODE_NAME);
   mxmlElementSetAttr(key_node_p, KEY_NODE_RID_ATTR_NAME, device_id_string);
   free(device_id_string);
+  if (kex)
+    mxmlElementSetAttr(key_node_p, KEY_NODE_KEX_ATTR_NAME, "true");
   (void) mxmlNewOpaque(key_node_p, key_b64);
 
-  mxmlAdd(msg_p->header_node_p, MXML_ADD_BEFORE, MXML_ADD_TO_PARENT, key_node_p);
+  mxmlAdd(recipient_node_p, MXML_ADD_BEFORE, MXML_ADD_TO_PARENT, key_node_p);
   g_free(key_b64);
   return 0;
 }
@@ -1351,19 +1364,35 @@ char * omemo_message_get_recipient_name_bare(omemo_message * msg_p) {
   return jid_strip_resource(omemo_message_get_recipient_name_full(msg_p));
 }
 
-int omemo_message_get_encrypted_key(omemo_message * msg_p, uint32_t own_device_id, uint8_t ** key_pp, size_t * key_len_p ) {
+int omemo_message_get_encrypted_key(omemo_message * msg_p, const char * recipient_name, uint32_t own_device_id, uint8_t ** key_pp, size_t * key_len_p ) {
   if (!msg_p || !key_pp) {
     return OMEMO_ERR_NULL;
   }
 
   int ret_val = 0;
 
+  gchar * recipient_name_bare = (void *) 0;
+  mxml_node_t * recipient_node_p = (void *) 0;
   mxml_node_t * key_node_p = (void *) 0;
   char * rid_string = (void *) 0;
   const char * key_b64 = (void *) 0;
   size_t key_len = 0;
 
-  key_node_p = mxmlFindElement(msg_p->header_node_p, msg_p->header_node_p, KEY_NODE_NAME, NULL, NULL, MXML_DESCEND);
+  if (recipient_name) {
+    recipient_name_bare = jid_strip_resource(recipient_name);
+  } else {
+    recipient_name_bare = omemo_message_get_recipient_name_bare(msg_p);
+  }
+  recipient_node_p = mxmlFindElement(msg_p->header_node_p, msg_p->header_node_p, RECIPIENT_NODE_NAME,
+				     RECIPIENT_NODE_JID_ATTR_NAME, recipient_name_bare,MXML_DESCEND);
+  if (recipient_node_p) {
+    key_node_p = mxmlFindElement(recipient_node_p, recipient_node_p, KEY_NODE_NAME,
+				 NULL, NULL, MXML_DESCEND);
+  } else {
+    // Assuming there is no RECIPIENT_NODEs in the message.
+    key_node_p = mxmlFindElement(msg_p->header_node_p, msg_p->header_node_p, KEY_NODE_NAME,
+				 NULL, NULL, MXML_DESCEND);
+  }
   if (!key_node_p) {
     // if there is not at least one key, skip the rest of the function
     ret_val = 0;
@@ -1404,6 +1433,7 @@ int omemo_message_get_encrypted_key(omemo_message * msg_p, uint32_t own_device_i
   *key_len_p = key_len;
 
 cleanup:
+  g_free(recipient_name_bare)
   free(rid_string);
   return ret_val;
 }
