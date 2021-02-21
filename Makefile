@@ -108,6 +108,8 @@ install: $(BDIR)
 	install -d $(DESTDIR)/$(PREFIX)/lib/$(ARCH)/pkgconfig/
 	install -m 644 $(BDIR)/libomemo-conversations.a  $(DESTDIR)/$(PREFIX)/lib/$(ARCH)/libomemo.a
 	install -m 644 $(BDIR)/libomemo.so $(DESTDIR)/$(PREFIX)/lib/$(ARCH)/libomemo.so.$(VERSION)
+	ln -s libomemo.so.$(VERSION) $(DESTDIR)/$(PREFIX)/lib/$(ARCH)/libomemo.so.$(VER_MAJ)
+	ln -s libomemo.so.$(VERSION) $(DESTDIR)/$(PREFIX)/lib/$(ARCH)/libomemo.so
 	install -m 644 $(BDIR)/libomemo.pc $(DESTDIR)/$(PREFIX)/lib/$(ARCH)/pkgconfig/
 	install -d $(DESTDIR)/$(PREFIX)/include/libomemo/
 	install -m 644 $(SDIR)/libomemo_crypto.h $(DESTDIR)/$(PREFIX)/include/libomemo/
