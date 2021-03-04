@@ -152,7 +152,7 @@ int omemo_bundle_set_signed_pre_key(omemo_bundle * bundle_p, uint32_t pre_key_id
  *
  * @param bundle_p Pointer to the bundle.
  * @param pre_key_id_p Will be set to the pre key id as returned by strtol.
- * @param data_pp Will be set to a pointer to the serialized key data. Has to be free()d when done.
+ * @param data_pp Will be set to a pointer to the serialized key data. Has to be g_free()d when done.
  * @param data_len_p Will be set to the length of the data.
  * @return 0 on success, negative on error.
  */
@@ -172,7 +172,7 @@ int omemo_bundle_set_signature(omemo_bundle * bundle_p, uint8_t * data_p, size_t
  * Gets the signature from the specified bundle.
  *
  * @param bundle_p Pointer to the bundle.
- * @param data_pp Will be set to a pointer to the signature data. Has to be free()d when done.
+ * @param data_pp Will be set to a pointer to the signature data. Has to be g_free()d when done.
  * @param data_len_p Will be set to the length of the data.
  * @return 0 on succcess, negative on error.
  */
@@ -192,7 +192,7 @@ int omemo_bundle_set_identity_key(omemo_bundle * bundle_p, uint8_t * data_p, siz
  * Gets the identity key from the specified bundle.
  *
  * @param bundle_p Pointer to the bundle.
- * @param data_pp Will be set to a pointer to the identity key data. Has to be free()d when done.
+ * @param data_pp Will be set to a pointer to the identity key data. Has to be g_free()d when done.
  * @param data_len_p Will be set to the length of the data.
  * @return 0 on success, negative on error.
  */
@@ -214,7 +214,7 @@ int omemo_bundle_add_pre_key(omemo_bundle * bundle_p, uint32_t pre_key_id, uint8
  *
  * @param bundle_p Pointer to the bundle.
  * @param pre_key_id_p Will be set to the ID of the selected pre key.
- * @param data_pp Will be set to a pointer to the serialized public key data. Has to be free()d when done.
+ * @param data_pp Will be set to a pointer to the serialized public key data. Has to be g_free()d when done.
  * @param data_len_p Will be set to the length of the data.
  * @return 0 on success, negative on error.
  */
@@ -440,16 +440,18 @@ const uint8_t * omemo_message_get_key(omemo_message * msg_p);
 size_t omemo_message_get_key_len(omemo_message * msg_p);
 
 /**
- * Add the encrypted symmetric key for a specific device id to the message.
+ * Add the encrypted symmetric key for a specific device to the message.
  * Only makes sense on outgoing messages.
  *
  * @param msg_p Pointer to the message to add to.
+ * @param recipient_name_bare The bare JID of the recipient.
  * @param device_id The recipient device ID.
  * @param encrypted_key_p The encrypted key data.
  * @param key_len Length of the encrypted key data.
+ * @param kex Whether the added key is intended for key exchange, default to 0.
  * @return 0 on success, negative on error.
  */
-int omemo_message_add_recipient(omemo_message * msg_p, uint32_t device_id, const uint8_t * encrypted_key_p, size_t key_len);
+int omemo_message_add_recipient(omemo_message * msg_p, const char * recipient_name_bare, uint32_t device_id, const uint8_t * encrypted_key_p, size_t key_len, int kex);
 
 /**
  * After all recipients have been added, this function can be used to export the resulting <message> stanza.
@@ -502,7 +504,7 @@ const char * omemo_message_get_sender_name_full(omemo_message * msg_p);
  * Note that there is no "from" attribute in outgoing messages.
  *
  * @param msg_p Pointer to the message.
- * @return The bare JID. Has to be free()d.
+ * @return The bare JID. Has to be g_free()d.
  */
 char * omemo_message_get_sender_name_bare(omemo_message * msg_p);
 
@@ -523,16 +525,17 @@ const char * omemo_message_get_recipient_name_full(omemo_message * msg_p);
 char * omemo_message_get_recipient_name_bare(omemo_message * msg_p);
 
 /**
- * Gets the encrypted key data for a specific device ID (usually your own so you can decrypt it).
+ * Gets the encrypted key data for a specific device (usually your own so you can decrypt it).
  *
  * @param msg_p Pointer to the message.
+ * @param recipient_name The JID get the encrypted key for, could be 0 for the intended recipient of the message.
  * @param own_device_id The device ID to get the encrypted key for.
  * @param key_pp Will be set to the encrypted key data, or NULL if there is no data for the specified ID.
- *               Has to be free()d.
+ *               Has to be g_free()d.
  * @param key_len_p Will be set to length of encrypted key data.
  * @return 0 on success, negative on error. Note that success does not mean a key was found.
  */
-int omemo_message_get_encrypted_key(omemo_message * msg_p, uint32_t own_device_id, uint8_t ** key_pp, size_t * key_len_p );
+int omemo_message_get_encrypted_key(omemo_message * msg_p, const char * recipient_name, uint32_t own_device_id, uint8_t ** key_pp, size_t * key_len_p );
 
 /**
  * Using the decrypted symmetric key, this method decrypts the payload and exports the original <message> stanza.
