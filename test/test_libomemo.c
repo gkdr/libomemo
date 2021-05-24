@@ -874,6 +874,32 @@ void test_message_add_recipient(void ** state) {
   omemo_message_destroy(msg_p);
 }
 
+// The prekey attribute is added to the key element.
+void test_message_add_recipient_w_prekey(void ** state) {
+  (void) state;
+
+  uint32_t sid = 4321;
+  uint32_t rid = 1234;
+
+  omemo_message * msg_p;
+  assert_int_equal(omemo_message_prepare_encryption(msg_out, sid, &crypto, OMEMO_STRIP_NONE, &msg_p), 0);
+
+  assert_int_equal(omemo_message_add_recipient_w_prekey(msg_p, rid, &data[0], 4), 0);
+
+  mxml_node_t * key_node_p = mxmlGetFirstChild(msg_p->header_node_p);
+  assert_ptr_not_equal(key_node_p, (void *) 0);
+  assert_string_equal(mxmlGetElement(key_node_p), "key");
+  assert_string_equal(mxmlElementGetAttr(key_node_p, "rid"), "1234");
+  assert_string_equal(mxmlElementGetAttr(key_node_p, "prekey"), "true");
+  assert_string_equal(mxmlGetOpaque(key_node_p), data_b64);
+
+  mxml_node_t * iv_node_p = mxmlGetLastChild(msg_p->header_node_p);
+  assert_ptr_not_equal(iv_node_p, (void *) 0);
+  assert_string_equal(mxmlGetElement(iv_node_p), "iv");
+
+  omemo_message_destroy(msg_p);
+}
+
 void test_message_export_encrypted(void ** state) {
   (void) state;
 
@@ -1356,6 +1382,7 @@ int main(void) {
       cmocka_unit_test(test_message_get_encrypted_key_after_iv),
       cmocka_unit_test(test_message_get_encrypted_key_no_keys),
       cmocka_unit_test(test_message_add_recipient),
+      cmocka_unit_test(test_message_add_recipient_w_prekey),
       cmocka_unit_test(test_message_export_encrypted),
       cmocka_unit_test(test_message_export_encrypted_strip_xhtml),
       cmocka_unit_test(test_message_export_encrypted_strip_multiple_body),

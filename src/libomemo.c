@@ -1,5 +1,6 @@
 #include <inttypes.h>
 #include <stdarg.h> // vsnprintf
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -62,6 +63,8 @@
 #define MESSAGE_NODE_TO_ATTR_NAME "to"
 #define HEADER_NODE_SID_ATTR_NAME "sid"
 #define KEY_NODE_RID_ATTR_NAME "rid"
+#define KEY_NODE_PREKEY_ATTR_NAME "prekey"
+#define KEY_NODE_PREKEY_ATTR_VAL_TRUE "true"
 #define PUBLISH_NODE_NODE_ATTR_NAME "node"
 #define SIGNED_PRE_KEY_NODE_ID_ATTR_NAME "signedPreKeyId"
 #define PRE_KEY_NODE_ID_ATTR_NAME "preKeyId"
@@ -1153,7 +1156,8 @@ size_t omemo_message_get_key_len(omemo_message * msg_p) {
   return msg_p->key_len + msg_p->tag_len;
 }
 
-int omemo_message_add_recipient(omemo_message * msg_p, uint32_t device_id, const uint8_t * encrypted_key_p, size_t key_len) {
+// adds a "key" element with the given parameters to the header.
+static int add_recipient(omemo_message * msg_p, uint32_t device_id, const uint8_t * encrypted_key_p, size_t key_len, bool prekey) {
   if (!msg_p || !msg_p->header_node_p || !encrypted_key_p) {
     return OMEMO_ERR_NULL;
   }
@@ -1166,12 +1170,25 @@ int omemo_message_add_recipient(omemo_message * msg_p, uint32_t device_id, const
   gchar * key_b64 = g_base64_encode(encrypted_key_p, key_len);
   mxml_node_t * key_node_p =  mxmlNewElement(MXML_NO_PARENT, KEY_NODE_NAME);
   mxmlElementSetAttr(key_node_p, KEY_NODE_RID_ATTR_NAME, device_id_string);
-  free(device_id_string);
   (void) mxmlNewOpaque(key_node_p, key_b64);
 
+  if (prekey) {
+    mxmlElementSetAttr(key_node_p, KEY_NODE_PREKEY_ATTR_NAME, KEY_NODE_PREKEY_ATTR_VAL_TRUE);
+  }
+
   mxmlAdd(msg_p->header_node_p, MXML_ADD_BEFORE, MXML_ADD_TO_PARENT, key_node_p);
+
+  free(device_id_string);
   g_free(key_b64);
   return 0;
+}
+
+int omemo_message_add_recipient(omemo_message * msg_p, uint32_t device_id, const uint8_t * encrypted_key_p, size_t key_len) {
+  return add_recipient(msg_p, device_id, encrypted_key_p, key_len, false);
+}
+
+int omemo_message_add_recipient_w_prekey(omemo_message * msg_p, uint32_t device_id, const uint8_t * encrypted_key_p, size_t key_len) {
+  return add_recipient(msg_p, device_id, encrypted_key_p, key_len, true);
 }
 
 int omemo_message_export_encrypted(omemo_message * msg_p, int add_msg, char ** msg_xml) {

@@ -452,6 +452,20 @@ size_t omemo_message_get_key_len(omemo_message * msg_p);
 int omemo_message_add_recipient(omemo_message * msg_p, uint32_t device_id, const uint8_t * encrypted_key_p, size_t key_len);
 
 /**
+ * Add the encrypted symmetric key for a specific device id to the message with the prekey attribute.
+ * This notifies the recipient device of the fact that this is the very first message of the session,
+ * which therefore still has to be estalished on its side. 
+ * Only makes sense on outgoing messages.
+ *
+ * @param msg_p Pointer to the message to add to.
+ * @param device_id The recipient device ID.
+ * @param encrypted_key_p The encrypted key data.
+ * @param key_len Length of the encrypted key data.
+ * @return 0 on success, negative on error.
+ */
+int omemo_message_add_recipient_w_prekey(omemo_message * msg_p, uint32_t device_id, const uint8_t * encrypted_key_p, size_t key_len);
+
+/**
  * After all recipients have been added, this function can be used to export the resulting <message> stanza.
  * Also adds a <store> hint.
  *
