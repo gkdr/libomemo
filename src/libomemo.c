@@ -1369,6 +1369,49 @@ char * omemo_message_get_recipient_name_bare(omemo_message * msg_p) {
   return jid_strip_resource(omemo_message_get_recipient_name_full(msg_p));
 }
 
+// Finds the key element for the given recipient device ID.
+static int omemo_message_find_key_element(omemo_message * msg_p, uint32_t rid, mxml_node_t ** key_node_pp) {
+  if (!msg_p || !key_node_pp) {
+    return OMEMO_ERR_NULL;
+  }
+
+  int ret_val = 0;
+  mxml_node_t * key_node_p = (void *) 0;
+  char * rid_string = (void *) 0;
+
+  key_node_p = mxmlFindElement(msg_p->header_node_p, msg_p->header_node_p, KEY_NODE_NAME, NULL, NULL, MXML_DESCEND);
+  if (!key_node_p) {
+    // if there is not at least one key, skip the rest of the function
+    ret_val = 0;
+    *key_node_pp = (void *) 0;
+    goto cleanup;
+  }
+
+  if (int_to_string(rid, &rid_string) <= 0) {
+    ret_val = OMEMO_ERR_NOMEM;
+    goto cleanup;
+  }
+
+  while (key_node_p) {
+    if (!strncmp(rid_string, mxmlElementGetAttr(key_node_p, KEY_NODE_RID_ATTR_NAME), strlen(rid_string))) {
+      *key_node_pp = key_node_p;
+        break;
+    }
+
+    ret_val = expect_next_node(key_node_p, mxmlGetNextSibling, KEY_NODE_NAME, &key_node_p);
+    if (ret_val) {
+      key_node_p = (void *) 0;
+      ret_val = 0;
+    }
+  }
+
+  
+cleanup:
+  free(rid_string);
+
+  return ret_val;
+}
+
 int omemo_message_get_encrypted_key(omemo_message * msg_p, uint32_t own_device_id, uint8_t ** key_pp, size_t * key_len_p ) {
   if (!msg_p || !key_pp) {
     return OMEMO_ERR_NULL;
@@ -1377,52 +1420,59 @@ int omemo_message_get_encrypted_key(omemo_message * msg_p, uint32_t own_device_i
   int ret_val = 0;
 
   mxml_node_t * key_node_p = (void *) 0;
-  char * rid_string = (void *) 0;
   const char * key_b64 = (void *) 0;
+  uint8_t * key_p = (void *) 0;
   size_t key_len = 0;
 
-  key_node_p = mxmlFindElement(msg_p->header_node_p, msg_p->header_node_p, KEY_NODE_NAME, NULL, NULL, MXML_DESCEND);
-  if (!key_node_p) {
-    // if there is not at least one key, skip the rest of the function
-    ret_val = 0;
-    *key_pp = (void *) 0;
+  ret_val = omemo_message_find_key_element(msg_p, own_device_id, &key_node_p);
+  if (ret_val || !key_node_p) {
     goto cleanup;
   }
 
-  if (int_to_string(own_device_id, &rid_string) <= 0) {
-    ret_val = OMEMO_ERR_NOMEM;
-    goto cleanup;
-  }
-
-
-  while (key_node_p) {
-    if (!strncmp(rid_string, mxmlElementGetAttr(key_node_p, KEY_NODE_RID_ATTR_NAME), strlen(rid_string))) {
-        key_b64 = mxmlGetOpaque(key_node_p);
-        if (!key_b64) {
-          ret_val = OMEMO_ERR_MALFORMED_XML;
-          goto cleanup;
-        }
-        break;
-    }
-
-    ret_val = expect_next_node(key_node_p, mxmlGetNextSibling, KEY_NODE_NAME, &key_node_p);
-
-    if (ret_val) {
-      key_node_p = (void *) 0;
-      ret_val = 0;
-    }
-  }
-
+  key_b64 = mxmlGetOpaque(key_node_p);
   if (!key_b64) {
     *key_pp = (void *) 0;
+    ret_val = OMEMO_ERR_MALFORMED_XML;
     goto cleanup;
   }
 
-  *key_pp = g_base64_decode(key_b64, &key_len);
-  *key_len_p = key_len;
+  key_p = g_base64_decode(key_b64, &key_len);
 
 cleanup:
-  free(rid_string);
+  *key_pp = key_p;
+  *key_len_p = key_len;
+  
+  return ret_val;
+}
+
+int omemo_message_is_encrypted_key_prekey(omemo_message * msg_p, uint32_t key_id, bool * is_prekey_p) {
+  if (!msg_p) {
+    return OMEMO_ERR_NULL;
+  }
+
+  int ret_val = 0;
+  mxml_node_t * key_node_p = (void *) 0;
+  const char * prekey_attr_val = (void *) 0;
+
+  ret_val = omemo_message_find_key_element(msg_p, key_id, &key_node_p);
+  if (ret_val || !key_node_p) {
+    *is_prekey_p = false;
+    goto cleanup;
+  }
+
+
+  prekey_attr_val = mxmlElementGetAttr(key_node_p, KEY_NODE_PREKEY_ATTR_NAME);
+  if (prekey_attr_val) {
+    // according to https://www.w3.org/TR/xmlschema-2/#boolean "1" can also be a boolean that means true
+    if (!strncmp(prekey_attr_val, KEY_NODE_PREKEY_ATTR_VAL_TRUE, strlen(KEY_NODE_PREKEY_ATTR_VAL_TRUE)) || !strncmp(prekey_attr_val, "1", strlen("1"))) {
+      *is_prekey_p = true;
+      goto cleanup;
+    }
+  }
+
+  *is_prekey_p = false;
+
+cleanup:
   return ret_val;
 }
 

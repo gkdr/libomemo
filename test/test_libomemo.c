@@ -790,6 +790,58 @@ void test_message_get_encrypted_key(void ** state) {
   omemo_message_destroy(msg_p);
 }
 
+// Only if the "prekey" attribute is "true" or "1", the function returns that it is a prekey.
+void test_message_is_encrypted_key_prekey(void ** state) {
+  (void) state;
+
+  char * msg = "<message to='bob@example.com' from='alice@example.com'>"
+                "<encrypted xmlns='urn:xmpp:omemo:0'>"
+                  "<header sid='1111'>"
+                    "<key prekey='true' rid='2222'>sWsAtQ==</key>"
+                    "<key rid='3333' prekey='true'>sWsAtQ==</key>"
+                    "<key rid='4444' prekey='1'>sWsAtQ==</key>"
+                    "<key rid='5555'>sWsAtQ==</key>"
+                    "<key rid='6666' prekey='false'>sWsAtQ==</key>"
+                    "<key rid='7777' prekey='0'>sWsAtQ==</key>"
+                    "<key rid='8888' prekey='TRUE'>sWsAtQ==</key>"
+                    "<key rid='9999' prekey='ASDF'>sWsAtQ==</key>"
+                    "<iv>BASE64ENCODED</iv>"
+                  "</header>"
+                  "<payload>BASE64ENCODED</payload>"
+                "</encrypted>"
+                "<store xmlns='urn:xmpp:hints'/>"
+              "</message>";
+
+  omemo_message * msg_p;
+  assert_int_equal(omemo_message_prepare_decryption(msg, &msg_p), 0);
+
+  bool is_prekey = false;
+
+  assert_int_equal(omemo_message_is_encrypted_key_prekey(msg_p, 2222, &is_prekey), 0);
+  assert_int_equal(is_prekey, true);
+
+  assert_int_equal(omemo_message_is_encrypted_key_prekey(msg_p, 3333, &is_prekey), 0);
+  assert_int_equal(is_prekey, true);
+
+  assert_int_equal(omemo_message_is_encrypted_key_prekey(msg_p, 4444, &is_prekey), 0);
+  assert_int_equal(is_prekey, true);
+
+  assert_int_equal(omemo_message_is_encrypted_key_prekey(msg_p, 5555, &is_prekey), 0);
+  assert_int_equal(is_prekey, false);
+
+  assert_int_equal(omemo_message_is_encrypted_key_prekey(msg_p, 6666, &is_prekey), 0);
+  assert_int_equal(is_prekey, false);
+
+  assert_int_equal(omemo_message_is_encrypted_key_prekey(msg_p, 7777, &is_prekey), 0);
+  assert_int_equal(is_prekey, false);
+
+  assert_int_equal(omemo_message_is_encrypted_key_prekey(msg_p, 8888, &is_prekey), 0);
+  assert_int_equal(is_prekey, false);
+
+  assert_int_equal(omemo_message_is_encrypted_key_prekey(msg_p, 9999, &is_prekey), 0);
+  assert_int_equal(is_prekey, false);
+}
+
 void test_message_get_encrypted_key_after_iv(void ** state) {
   (void) state;
 
@@ -1381,6 +1433,7 @@ int main(void) {
       cmocka_unit_test(test_message_get_encrypted_key),
       cmocka_unit_test(test_message_get_encrypted_key_after_iv),
       cmocka_unit_test(test_message_get_encrypted_key_no_keys),
+      cmocka_unit_test(test_message_is_encrypted_key_prekey),
       cmocka_unit_test(test_message_add_recipient),
       cmocka_unit_test(test_message_add_recipient_w_prekey),
       cmocka_unit_test(test_message_export_encrypted),

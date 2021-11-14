@@ -6,6 +6,7 @@
 #pragma once
 
 #include <inttypes.h>
+#include <stdbool.h>
 
 #include <glib.h>
 
@@ -427,6 +428,7 @@ int omemo_message_prepare_encryption(char * outgoing_message, uint32_t sender_de
  */
 const uint8_t * omemo_message_get_key(omemo_message * msg_p);
 
+
 /**
  * Gets the length of the symmetric key and appended tag.
  * Again, this only makes sense on an outgoing message.
@@ -547,6 +549,16 @@ char * omemo_message_get_recipient_name_bare(omemo_message * msg_p);
  * @return 0 on success, negative on error. Note that success does not mean a key was found.
  */
 int omemo_message_get_encrypted_key(omemo_message * msg_p, uint32_t own_device_id, uint8_t ** key_pp, size_t * key_len_p );
+
+/**
+ * Returns whether the key with the speicified device ID is a prekey.
+ * 
+ * @param msg_p Pointer to the message.
+ * @param recipient_device_id  The device ID to check.
+ * @param is_prekey_p Will be set to true if the key is a prekey, false otherwise.
+ * @return int 0 on success, negative on error.
+ */
+int omemo_message_is_encrypted_key_prekey(omemo_message * msg_p, uint32_t recipient_device_id, bool * is_prekey_p);
 
 /**
  * Using the decrypted symmetric key, this method decrypts the payload and exports the original <message> stanza.
