@@ -6,7 +6,7 @@ LIBTOOL ?= libtool
 MKDIR = mkdir
 MKDIR_P = mkdir -p
 
-ARCH = $(shell gcc -print-multiarch)
+ARCH = $(shell $(CC) -print-multiarch)
 VER_MAJ = 0
 VERSION = 0.7.1
 
