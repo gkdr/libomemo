@@ -1,0 +1,52 @@
+# Copyright (c) 2022 Sebastian Pipping <sebastian@pipping.org>
+# Licensed under the GPL v2 or later
+
+name: Build for Linux
+
+on:
+  pull_request:
+  push:
+  schedule:
+    - cron: '0 2 * * 5'  # Every Friday at 2am
+
+jobs:
+  checks:
+    name: Build for Linux
+    runs-on: ubuntu-20.04
+    steps:
+
+    - uses: actions/checkout@v2.4.0
+
+    - name: Install build dependencies
+      run: |-
+        set -x
+        sudo apt-get update
+        sudo apt-get install --yes --no-install-recommends -V \
+            gcovr \
+            libcmocka-dev \
+            libgcrypt20-dev \
+            libglib2.0-dev \
+            libmxml-dev \
+            libsqlite3-dev
+
+    - name: Build
+      run: |-
+        set -x
+        make -j $(nproc) all
+
+    - name: Test
+      run: |-
+        make coverage  # includes tests
+
+    - name: Install
+      run: |-
+        set -x -o pipefail
+        make DESTDIR="${PWD}"/ROOT install
+        find ROOT/ -not -type d | sort | xargs ls -l
+
+    - name: Store coverage HTML report
+      uses: actions/upload-artifact@v2.3.1
+      with:
+        name: coverage
+        path: coverage/
+        if-no-files-found: error
