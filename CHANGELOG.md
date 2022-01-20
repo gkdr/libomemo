@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Added missing symlinks for the `.so` files. ([#34](https://github.com/gkdr/libomemo/pull/34)) (thanks, [@hartwork](https://github.com/hartwork)!)
 
+### Infrastructure
+- Cover Linux build by GitHub Actions CI ([#37](https://github.com/gkdr/libomemo/pull/37)) (thanks, [@hartwork](https://github.com/hartwork)!)
+
 ## [0.7.1] - 2021-01-31
 ### Fixed
 - Test file cleanup now won't randomly break parallel builds. ([#31](https://github.com/gkdr/libomemo/pull/31)) (thanks, [@fortysixandtwo](https://github.com/fortysixandtwo)!)
