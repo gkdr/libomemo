@@ -17,9 +17,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added missing symlinks for the `.so` files. ([#34](https://github.com/gkdr/libomemo/pull/34)) (thanks, [@hartwork](https://github.com/hartwork)!)
 - Fix crossbuild using wrong multiarch triplet. ([#36](https://github.com/gkdr/libomemo/pull/36)) (thanks, [@fortysixandtwo](https://github.com/fortysixandtwo)!)
 - Flaky test `test_aes_gcm_encrypt_decrypt`. ([#39](https://github.com/gkdr/libomemo/issues/39)) (thanks, [@hartwork](https://github.com/hartwork)!)
+- Fix default prefix to be `/usr/local` rather than `/` ([#38](https://github.com/gkdr/libomemo/pull/38)) (thanks, [@hartwork](https://github.com/hartwork)!)
+- Fix filed `Requires.private` and `Requires` in auto-generated pkg-config file `libomemo.pc` ([#38](https://github.com/gkdr/libomemo/pull/38)) (thanks, [@hartwork](https://github.com/hartwork)!)
+
+### Changed
+- Migrate build system from a Makefile to CMake ([#38](https://github.com/gkdr/libomemo/pull/38)) (thanks, [@hartwork](https://github.com/hartwork)!)
 
 ### Infrastructure
 - Cover Linux build by GitHub Actions CI ([#37](https://github.com/gkdr/libomemo/pull/37)) (thanks, [@hartwork](https://github.com/hartwork)!)
+- Cover Windows build by GitHub Actions CI using msys2 ([#38](https://github.com/gkdr/libomemo/pull/38)) (thanks, [@hartwork](https://github.com/hartwork)!)
 
 ## [0.7.1] - 2021-01-31
 ### Fixed
