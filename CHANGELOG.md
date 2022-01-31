@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - It is now possible to add a key with a `prekey` attribute. ([#28](https://github.com/gkdr/libomemo/issues/28))
 - A function to check via the attribute whether a received key is a prekey.
+- Mention in the README the exact version implemented. ([#26](https://github.com/gkdr/libomemo/issues/26))
 
 ### Fixed
 - Added missing symlinks for the `.so` files. ([#34](https://github.com/gkdr/libomemo/pull/34)) (thanks, [@hartwork](https://github.com/hartwork)!)

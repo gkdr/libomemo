@@ -1,5 +1,5 @@
 # libomemo 0.7.1
-Implements [OMEMO](https://conversations.im/omemo/) ([XEP-0384](https://xmpp.org/extensions/xep-0384.html)) in C.
+Implements [OMEMO](https://conversations.im/omemo/) ([XEP-0384 v0.3.0](https://xmpp.org/extensions/attic/xep-0384-0.3.0.html)) in C.
 
 Input and output are XML strings, so it does not force you to use a certain XML lib.
 While the actual protocol functions do not depend on any kind of storage, it comes with a basic implementation in SQLite.
