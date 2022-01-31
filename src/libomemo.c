@@ -13,23 +13,9 @@
 
 #define HINTS_XMLNS "urn:xmpp:hints"
 
-#ifndef OMEMO_XMLNS
-#define OMEMO_XMLNS "urn:xmpp:omemo"
-#endif
-
-#ifndef OMEMO_NS_SEPARATOR
-#define OMEMO_NS_SEPARATOR ":"
-#endif
-
+#define OMEMO_NS_SEPARATOR "."
 #define OMEMO_NS_SEPARATOR_FINAL ":"
-
-#define OMEMO_VERSION "0"
-
-#ifdef OMEMO_NS_NOVERSION
-#define OMEMO_NS OMEMO_XMLNS
-#else
-#define OMEMO_NS OMEMO_XMLNS ":" OMEMO_VERSION
-#endif
+#define OMEMO_NS "eu.siacs.conversations.axolotl"
 
 #define PEP_NODE_NAME "node"
 #define DEVICELIST_PEP_NAME "devicelist"

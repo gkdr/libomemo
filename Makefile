@@ -46,7 +46,7 @@ CFLAGS += -std=c11 -Wall -Wextra -Wpedantic -Wstrict-overflow \
 		-fno-strict-aliasing -funsigned-char \
 		-fno-builtin-memset -g $(PKGCFG_C)
 CPPFLAGS += -D_XOPEN_SOURCE=700 -D_DEFAULT_SOURCE
-CFLAGS_CONVERSATIONS=$(CFLAGS) -DOMEMO_XMLNS='"eu.siacs.conversations.axolotl"' -DOMEMO_NS_SEPARATOR='"."' -DOMEMO_NS_NOVERSION
+CFLAGS_CONVERSATIONS=$(CFLAGS) 
 COVFLAGS = --coverage -O0 -g $(CFLAGS)
 LDFLAGS += -pthread -ldl -lm $(PKGCFG_L)
 TESTFLAGS = -lcmocka $(LDFLAGS)

@@ -6,18 +6,18 @@
 #include "../src/libomemo.c"
 #include "../src/libomemo_crypto.c"
 
-char * devicelist = "<items node='urn:xmpp:omemo:0:devicelist'>"
+char * devicelist = "<items node='eu.siacs.conversations.axolotl.devicelist'>"
                               "<item>"
-                                "<list xmlns='urn:xmpp:omemo:0'>"
+                                "<list xmlns='eu.siacs.conversations.axolotl'>"
                                    "<device id='4223' />"
                                    "<device id='1337' />"
                                 "</list>"
                               "</item>"
                             "</items>";
 
-char * bundle = "<items node='urn:xmpp:omemo:0:bundles:31415'>"
+char * bundle = "<items node='eu.siacs.conversations.axolotl.bundles:31415'>"
                   "<item>"
-                    "<bundle xmlns='urn:xmpp:omemo:0'>"
+                    "<bundle xmlns='eu.siacs.conversations.axolotl'>"
                       "<signedPreKeyPublic signedPreKeyId='1'>sWsAtQ==</signedPreKeyPublic>"
                       "<signedPreKeySignature>sWsAtQ==</signedPreKeySignature>"
                       "<identityKey>sWsAtQ==</identityKey>"
@@ -60,7 +60,7 @@ void test_devicelist_create(void ** state) {
   assert_int_equal(omemo_devicelist_create("alice", &dl_p), 0);
   assert_string_equal(dl_p->from, "alice");
   assert_string_equal(mxmlGetElement(dl_p->list_node_p), "list");
-  assert_string_equal(mxmlElementGetAttr(dl_p->list_node_p, "xmlns"), "urn:xmpp:omemo:0");
+  assert_string_equal(mxmlElementGetAttr(dl_p->list_node_p, "xmlns"), "eu.siacs.conversations.axolotl");
   assert_ptr_equal(mxmlGetFirstChild(dl_p->list_node_p), (void *) 0);
 
   omemo_devicelist_destroy(dl_p);
@@ -73,7 +73,7 @@ void test_devicelist_import(void ** state) {
   assert_int_equal(omemo_devicelist_import(devicelist, "bob", &dl_p), 0);
   assert_string_equal(dl_p->from, "bob");
   assert_string_equal(mxmlGetElement(dl_p->list_node_p), "list");
-  assert_string_equal(mxmlElementGetAttr(dl_p->list_node_p, "xmlns"), "urn:xmpp:omemo:0");
+  assert_string_equal(mxmlElementGetAttr(dl_p->list_node_p, "xmlns"), "eu.siacs.conversations.axolotl");
 
   mxml_node_t * device_node_p;
   assert_int_equal(expect_next_node(dl_p->list_node_p, mxmlGetFirstChild, "device", &device_node_p), 0);
@@ -99,9 +99,9 @@ void test_devicelist_import(void ** state) {
 void test_devicelist_import_empty(void ** state) {
   (void) state;
 
-  char * devicelist_empty = "<items node='urn:xmpp:omemo:0:devicelist'>"
+  char * devicelist_empty = "<items node='eu.siacs.conversations.axolotl.devicelist'>"
                                 "<item>"
-                                  "<list xmlns='urn:xmpp:omemo:0'>"
+                                  "<list xmlns='eu.siacs.conversations.axolotl'>"
                                   "</list>"
                                 "</item>"
                               "</items>";
@@ -117,7 +117,7 @@ void test_devicelist_import_empty(void ** state) {
 void test_devicelist_import_empty_alt(void ** state) {
   (void) state;
 
-  char * devicelist_empty = "<items node='urn:xmpp:omemo:0:devicelist' />";
+  char * devicelist_empty = "<items node='eu.siacs.conversations.axolotl.devicelist' />";
 
   omemo_devicelist * dl_p;
   assert_int_equal(omemo_devicelist_import(devicelist_empty, "alice", &dl_p), 0);
@@ -251,14 +251,14 @@ void test_devicelist_export(void ** state) {
   mxml_node_t * publish_node_p = mxmlLoadString((void *) 0, xml, MXML_NO_CALLBACK);
   assert_ptr_not_equal(publish_node_p, (void *) 0);
   assert_string_equal(mxmlGetElement(publish_node_p), "publish");
-  assert_string_equal(mxmlElementGetAttr(publish_node_p, "node"), "urn:xmpp:omemo:0:devicelist");
+  assert_string_equal(mxmlElementGetAttr(publish_node_p, "node"), "eu.siacs.conversations.axolotl.devicelist");
 
   mxml_node_t * item_node_p = mxmlGetFirstChild(publish_node_p);
   assert_string_equal(mxmlGetElement(item_node_p), "item");
 
   mxml_node_t * list_node_p = mxmlGetFirstChild(item_node_p);
   assert_string_equal(mxmlGetElement(list_node_p), "list");
-  assert_string_equal(mxmlElementGetAttr(list_node_p, "xmlns"), "urn:xmpp:omemo:0");
+  assert_string_equal(mxmlElementGetAttr(list_node_p, "xmlns"), "eu.siacs.conversations.axolotl");
 
   mxml_node_t * device_node_p = mxmlGetFirstChild(list_node_p);
   assert_string_equal(mxmlGetElement(device_node_p), "device");
@@ -278,7 +278,7 @@ void test_devicelist_get_pep_node_name(void ** state) {
 
   char * node_name = (void *) 0;
   assert_int_equal(omemo_devicelist_get_pep_node_name(&node_name), 0);
-  assert_string_equal(node_name, "urn:xmpp:omemo:0:devicelist");
+  assert_string_equal(node_name, "eu.siacs.conversations.axolotl.devicelist");
 
   free(node_name);
 }
@@ -450,7 +450,7 @@ void test_bundle_export(void ** state) {
   mxml_node_t * bundle_node_p = mxmlGetFirstChild(item_node_p);
   assert_ptr_not_equal(bundle_node_p, (void *) 0);
   assert_string_equal(mxmlGetElement(bundle_node_p), "bundle");
-  assert_string_equal(mxmlElementGetAttr(bundle_node_p, "xmlns"), "urn:xmpp:omemo:0");
+  assert_string_equal(mxmlElementGetAttr(bundle_node_p, "xmlns"), "eu.siacs.conversations.axolotl");
 
   mxml_node_t * signed_pk_node_p = mxmlGetFirstChild(bundle_node_p);
   assert_ptr_not_equal(signed_pk_node_p, (void *) 0);
@@ -487,7 +487,7 @@ void test_bundle_get_pep_node_name(void ** state) {
 
   char * node_name = (void *) 0;
   assert_int_equal(omemo_bundle_get_pep_node_name(1337, &node_name), 0);
-  assert_string_equal(node_name, "urn:xmpp:omemo:0:bundles:1337");
+  assert_string_equal(node_name, "eu.siacs.conversations.axolotl.bundles:1337");
 
   free(node_name);
 }
@@ -495,8 +495,8 @@ void test_bundle_get_pep_node_name(void ** state) {
 void test_bundle_import_malformed(void ** state) {
   (void) state;
 
-  char * bundle_malformed_1 = "<items node='urn:xmpp:omemo:0:bundles:31415'>"
-                                "<bundle xmlns='urn:xmpp:omemo:0'>"
+  char * bundle_malformed_1 = "<items node='eu.siacs.conversations.axolotl.bundles:31415'>"
+                                "<bundle xmlns='eu.siacs.conversations.axolotl'>"
                                   "<signedPreKeyPublic signedPreKeyId='1'>sWsAtQ==</signedPreKeyPublic>"
                                   "<signedPreKeySignature>sWsAtQ==</signedPreKeySignature>"
                                   "<identityKey>sWsAtQ==</identityKey>"
@@ -510,9 +510,9 @@ void test_bundle_import_malformed(void ** state) {
                                 "</item>"
                               "</items>";
 
-  char * bundle_malformed_2 = "<items node='urn:xmpp:omemo:0:bundles:31415'>"
+  char * bundle_malformed_2 = "<items node='eu.siacs.conversations.axolotl.bundles:31415'>"
                                 "<item>"
-                                  "<bundle xmlns='urn:xmpp:omemo:0'>"
+                                  "<bundle xmlns='eu.siacs.conversations.axolotl'>"
                                     "<signedPreKeySignature>sWsAtQ==</signedPreKeySignature>"
                                     "<identityKey>sWsAtQ==</identityKey>"
                                     "<prekeys>"
@@ -525,9 +525,9 @@ void test_bundle_import_malformed(void ** state) {
                                   "</item>"
                                 "</items>";
 
-  char * bundle_malformed_3 = "<items node='urn:xmpp:omemo:0:bundles:31415'>"
+  char * bundle_malformed_3 = "<items node='eu.siacs.conversations.axolotl.bundles:31415'>"
                                 "<item>"
-                                  "<bundle xmlns='urn:xmpp:omemo:0'>"
+                                  "<bundle xmlns='eu.siacs.conversations.axolotl'>"
                                     "<signedPreKeyPublic signedPreKeyId='1'>sWsAtQ==</signedPreKeyPublic>"
                                     "<identityKey>sWsAtQ==</identityKey>"
                                     "<prekeys>"
@@ -540,9 +540,9 @@ void test_bundle_import_malformed(void ** state) {
                                   "</item>"
                                 "</items>";
 
-  char * bundle_malformed_4 = "<items node='urn:xmpp:omemo:0:bundles:31415'>"
+  char * bundle_malformed_4 = "<items node='eu.siacs.conversations.axolotl.bundles:31415'>"
                                 "<item>"
-                                  "<bundle xmlns='urn:xmpp:omemo:0'>"
+                                  "<bundle xmlns='eu.siacs.conversations.axolotl'>"
                                     "<signedPreKeyPublic signedPreKeyId='1'>sWsAtQ==</signedPreKeyPublic>"
                                     "<signedPreKeySignature>sWsAtQ==</signedPreKeySignature>"
                                     "<prekeys>"
@@ -555,9 +555,9 @@ void test_bundle_import_malformed(void ** state) {
                                   "</item>"
                                 "</items>";
 
-  char * bundle_malformed_5 = "<items node='urn:xmpp:omemo:0:bundles:31415'>"
+  char * bundle_malformed_5 = "<items node='eu.siacs.conversations.axolotl.bundles:31415'>"
                                 "<item>"
-                                  "<bundle xmlns='urn:xmpp:omemo:0'>"
+                                  "<bundle xmlns='eu.siacs.conversations.axolotl'>"
                                     "<signedPreKeyPublic signedPreKeyId='1'>sWsAtQ==</signedPreKeyPublic>"
                                     "<signedPreKeySignature>sWsAtQ==</signedPreKeySignature>"
                                     "<identityKey>sWsAtQ==</identityKey>"
@@ -765,7 +765,7 @@ void test_message_get_encrypted_key(void ** state) {
   (void) state;
 
   char * msg = "<message to='bob@example.com' from='alice@example.com'>"
-                 "<encrypted xmlns='urn:xmpp:omemo:0'>"
+                 "<encrypted xmlns='eu.siacs.conversations.axolotl'>"
                    "<header sid='1111'>"
                      "<key rid='2222'>sWsAtQ==</key>"
                      "<iv>BASE64ENCODED</iv>"
@@ -795,7 +795,7 @@ void test_message_is_encrypted_key_prekey(void ** state) {
   (void) state;
 
   char * msg = "<message to='bob@example.com' from='alice@example.com'>"
-                "<encrypted xmlns='urn:xmpp:omemo:0'>"
+                "<encrypted xmlns='eu.siacs.conversations.axolotl'>"
                   "<header sid='1111'>"
                     "<key prekey='true' rid='2222'>sWsAtQ==</key>"
                     "<key rid='3333' prekey='true'>sWsAtQ==</key>"
@@ -846,7 +846,7 @@ void test_message_get_encrypted_key_after_iv(void ** state) {
   (void) state;
 
   char * msg = "<message to='bob@example.com' from='alice@example.com'>"
-                 "<encrypted xmlns='urn:xmpp:omemo:0'>"
+                 "<encrypted xmlns='eu.siacs.conversations.axolotl'>"
                    "<header sid='1111'>"
                      "<iv>BASE64ENCODED</iv>"
                      "<key rid='2222'>sWsAtQ==</key>"
@@ -875,7 +875,7 @@ void test_message_get_encrypted_key_no_keys(void ** state) {
   (void) state;
 
   char * msg = "<message to='bob@example.com' from='alice@example.com'>"
-                 "<encrypted xmlns='urn:xmpp:omemo:0'>"
+                 "<encrypted xmlns='eu.siacs.conversations.axolotl'>"
                    "<header sid='1111'>"
                      "<iv>BASE64ENCODED</iv>"
                    "</header>"
@@ -971,7 +971,7 @@ void test_message_export_encrypted(void ** state) {
 
   mxml_node_t * encrypted_node_p;
   assert_int_equal(expect_next_node(message_node_p, mxmlGetFirstChild, "encrypted", &encrypted_node_p), 0);
-  assert_string_equal(mxmlElementGetAttr(encrypted_node_p, "xmlns"), "urn:xmpp:omemo:0");
+  assert_string_equal(mxmlElementGetAttr(encrypted_node_p, "xmlns"), "eu.siacs.conversations.axolotl");
 
   mxml_node_t * header_node_p;
   assert_int_equal(expect_next_node(encrypted_node_p, mxmlGetFirstChild, "header", &header_node_p), 0);
@@ -1014,7 +1014,7 @@ void test_message_export_encrypted_with_extra_tags_and_body(void ** state) {
 
   mxml_node_t * encrypted_node_p;
   assert_int_equal(expect_next_node(body_node_p, mxmlGetNextSibling, "encrypted", &encrypted_node_p), 0);
-  assert_string_equal(mxmlElementGetAttr(encrypted_node_p, "xmlns"), "urn:xmpp:omemo:0");
+  assert_string_equal(mxmlElementGetAttr(encrypted_node_p, "xmlns"), "eu.siacs.conversations.axolotl");
 
   mxml_node_t * header_node_p;
   assert_int_equal(expect_next_node(encrypted_node_p, mxmlGetFirstChild, "header", &header_node_p), 0);
@@ -1164,7 +1164,7 @@ void test_message_export_encrypted_with_eme(void ** state) {
 
   mxml_node_t * encrypted_node_p;
   assert_int_equal(expect_next_node(message_node_p, mxmlGetFirstChild, "encrypted", &encrypted_node_p), 0);
-  assert_string_equal(mxmlElementGetAttr(encrypted_node_p, "xmlns"), "urn:xmpp:omemo:0");
+  assert_string_equal(mxmlElementGetAttr(encrypted_node_p, "xmlns"), "eu.siacs.conversations.axolotl");
 
   mxml_node_t * header_node_p;
   assert_int_equal(expect_next_node(encrypted_node_p, mxmlGetFirstChild, "header", &header_node_p), 0);
