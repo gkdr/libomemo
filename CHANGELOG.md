@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Added missing symlinks for the `.so` files. ([#34](https://github.com/gkdr/libomemo/pull/34)) (thanks, [@hartwork](https://github.com/hartwork)!)
 - Fix crossbuild using wrong multiarch triplet. ([#36](https://github.com/gkdr/libomemo/pull/36)) (thanks, [@fortysixandtwo](https://github.com/fortysixandtwo)!)
+- Flaky test `test_aes_gcm_encrypt_decrypt`. ([#39](https://github.com/gkdr/libomemo/issues/39)) (thanks, [@hartwork](https://github.com/hartwork)!)
 
 ### Infrastructure
 - Cover Linux build by GitHub Actions CI ([#37](https://github.com/gkdr/libomemo/pull/37)) (thanks, [@hartwork](https://github.com/hartwork)!)

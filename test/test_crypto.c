@@ -74,8 +74,8 @@ void test_aes_gcm_encrypt_decrypt(void ** state) {
   assert_int_equal(plaintext_len, result_len);
   assert_memory_equal(plaintext_p, result_p, plaintext_len);
 
-  ciphertext_p[0] = 0x00;
-
+  // now change the ct so that the tag verification fails
+  ciphertext_p[0] += 1;
   assert_int_equal(omemo_default_crypto_aes_gcm_decrypt(ciphertext_p, ciphertext_len,
                                                         iv_p, iv_len,
                                                         key_p, key_len,
