@@ -8,16 +8,53 @@ It deals with devicelists and bundles as well as encrypting the payload, but doe
 However, you can use my [axc](https://github.com/gkdr/axc) lib for that and easily combine it with this one (or write all the libsignal client code yourself if that is better suited to your needs).
 
 ## Dependencies
+* CMake (`cmake`)
+* pkg-config (`pkg-config`) or pkgconf (`pkgconf`)
 * [Mini-XML](http://www.msweet.org/projects.php?Z3) (`libmxml-dev`)
 * gcrypt (`libgcrypt20-dev`)
 * glib (`libglib2.0-dev`)
 * SQLite (`libsqlite3-dev`)
+* GNU make (`make`) or Ninja (`ninja-build`)
 
 Optional: 
-* For testing: [cmocka](https://cmocka.org/) (`make test`)
-* For the coverage report: [gcovr](https://gcovr.com/) (`make coverage`)
+* [cmocka](https://cmocka.org/) (`libcmocka-dev`) for testing (`make test`)
+* [gcovr](http://gcovr.com/) (`gcovr`) for a coverage report (`make coverage`)
 
-I recommend to simply link it statically - the standard target is a is a static lib (containing PIC) which uses the _compatible_ namespace (i.e. not the one in the XEP). 
+## Installation
+libomemo uses CMake as a build system.  It can be used with either GNU make or Ninja.  For example:
+
+```
+mkdir build
+cd build
+
+cmake -G Ninja ..  # for options see below
+
+ninja -v all
+ninja -v test  # potentially with CTEST_OUTPUT_ON_FAILURE=1 in the environment
+ninja -v install
+```
+
+The following configuration options are supported:
+
+```console
+# rm -f CMakeCache.txt ; cmake -D_OMEMO_HELP=ON -LH . | grep -B1 ':.*=' | sed 's,^--$,,'
+// Build shared libraries (rather than static ones)
+BUILD_SHARED_LIBS:BOOL=ON
+
+// Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel ...
+CMAKE_BUILD_TYPE:STRING=
+
+// Install path prefix, prepended onto install directories.
+CMAKE_INSTALL_PREFIX:PATH=/usr/local
+
+// Install build artifacts
+OMEMO_INSTALL:BOOL=ON
+
+// Build test suite (depends on cmocka)
+OMEMO_WITH_TESTS:BOOL=ON
+```
+
+They can be passed to CMake as `-D<key>=<value>`, e.g. `-DBUILD_SHARED_LIBS=OFF`.
 
 ## Usage
 Basically, there are three data types: messages, devicelists, and bundles.

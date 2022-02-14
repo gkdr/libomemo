@@ -9,7 +9,7 @@
 #include "../src/libomemo.c"
 #include "../src/libomemo_storage.c"
 
-#define TEST_DB_PATH "test/test.sqlite"
+#define TEST_DB_PATH "test.sqlite"
 
 int db_cleanup(void ** state) {
   (void) state;
