@@ -229,7 +229,7 @@ int omemo_bundle_get_signed_pre_key(omemo_bundle * bundle_p, uint32_t * pre_key_
 
   pre_key_id_string = mxmlElementGetAttr(bundle_p->signed_pk_node_p, SIGNED_PRE_KEY_NODE_ID_ATTR_NAME);
   if (!pre_key_id_string) {
-    ret_val = OMEMO_ERR_MALFORMED_BUNDLE;
+    ret_val = OMEMO_ERR_MALFORMED_BUNDLE - 1;
     goto cleanup;
   }
 
@@ -390,20 +390,20 @@ int omemo_bundle_get_random_pre_key(omemo_bundle * bundle_p, uint32_t * pre_key_
   for (int i = 0; i < random; i++) {
     next_p = mxmlGetNextSibling(next_p);
     if (!next_p) {
-      ret_val = OMEMO_ERR_MALFORMED_BUNDLE;
+      ret_val = OMEMO_ERR_MALFORMED_BUNDLE - i;
       goto cleanup;
     }
   }
 
   pre_key_id_string = mxmlElementGetAttr(next_p, PRE_KEY_NODE_ID_ATTR_NAME);
   if (!pre_key_id_string) {
-    ret_val = OMEMO_ERR_MALFORMED_BUNDLE;
+    ret_val = OMEMO_ERR_MALFORMED_BUNDLE - bundle_p->pre_keys_amount;
     goto cleanup;
   }
 
   b64_string = mxmlGetOpaque(next_p);
   if (!b64_string) {
-    ret_val = OMEMO_ERR_MALFORMED_BUNDLE;
+    ret_val = OMEMO_ERR_MALFORMED_BUNDLE - bundle_p->pre_keys_amount - 1;
     goto cleanup;
   }
 
