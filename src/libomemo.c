@@ -151,6 +151,13 @@ static int expect_next_node(mxml_node_t * node_p, mxml_node_t * (*next_node_func
   return 0;
 }
 
+#define log_err(format, ...) \
+    do { \
+        if (getenv("LIBOMEMO_DEBUG")) { \
+          vfprintf(stderr, "libomemo - error: " format, ##__VA_ARGS__); \
+        } \
+    } while(0)
+
 int omemo_bundle_create(omemo_bundle ** bundle_pp) {
   omemo_bundle * bundle_p = malloc(sizeof(omemo_bundle));
   if (!bundle_p) {
@@ -390,6 +397,7 @@ int omemo_bundle_get_random_pre_key(omemo_bundle * bundle_p, uint32_t * pre_key_
   for (int i = 0; i < random; i++) {
     next_p = mxmlGetNextSibling(next_p);
     if (!next_p) {
+      log_err("failed to forward pointer to desired item %d out of %d items at index %d\n", random, bundle_p->pre_keys_amount, i);
       ret_val = OMEMO_ERR_MALFORMED_BUNDLE;
       goto cleanup;
     }
@@ -500,6 +508,7 @@ int omemo_bundle_import (const char * received_bundle, omemo_bundle ** bundle_pp
 
   items_node_p = mxmlLoadString((void *) 0, received_bundle, MXML_OPAQUE_CALLBACK);
   if (!items_node_p) {
+    log_err("received bundle response is invalid XML: %s\n", received_bundle);
     ret_val = OMEMO_ERR_MALFORMED_XML;
     goto cleanup;
   }
@@ -600,7 +609,7 @@ cleanup:
 }
 
 int omemo_bundle_get_pep_node_name(uint32_t device_id, char ** node_name_p) {
-  char * format = "%s%s%s%s%i";
+  const char * format = "%s%s%s%s%i";
   size_t len = snprintf((void *) 0, 0, format, OMEMO_NS, OMEMO_NS_SEPARATOR, BUNDLE_PEP_NAME, OMEMO_NS_SEPARATOR_FINAL, device_id);
   size_t buf_len = len + 1;
 
