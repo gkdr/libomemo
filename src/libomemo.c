@@ -223,13 +223,13 @@ int omemo_bundle_get_signed_pre_key(omemo_bundle * bundle_p, uint32_t * pre_key_
 
   b64_string = mxmlGetOpaque(bundle_p->signed_pk_node_p);
   if (!b64_string) {
-    ret_val = OMEMO_ERR_MALFORMED_BUNDLE;
+    ret_val = OMEMO_ERR_MALFORMED_BUNDLE_NO_SPK_DATA;
     goto cleanup;
   }
 
   pre_key_id_string = mxmlElementGetAttr(bundle_p->signed_pk_node_p, SIGNED_PRE_KEY_NODE_ID_ATTR_NAME);
   if (!pre_key_id_string) {
-    ret_val = OMEMO_ERR_MALFORMED_BUNDLE - 1;
+    ret_val = OMEMO_ERR_MALFORMED_BUNDLE_NO_SPK_ID_ATTR;
     goto cleanup;
   }
 
@@ -271,7 +271,7 @@ int omemo_bundle_get_signature(omemo_bundle * bundle_p, uint8_t ** data_pp, size
 
   b64_string = mxmlGetOpaque(bundle_p->signature_node_p);
   if (!b64_string) {
-    ret_val = OMEMO_ERR_MALFORMED_BUNDLE;
+    ret_val = OMEMO_ERR_MALFORMED_BUNDLE_NO_SIG_DATA;
     goto cleanup;
   }
 
@@ -312,7 +312,7 @@ int omemo_bundle_get_identity_key(omemo_bundle * bundle_p, uint8_t ** data_pp, s
 
   b64_string = mxmlGetOpaque(bundle_p->identity_key_node_p);
   if (!b64_string) {
-    ret_val = OMEMO_ERR_MALFORMED_BUNDLE;
+    ret_val = OMEMO_ERR_MALFORMED_BUNDLE_NO_IK_DATA;
     goto cleanup;
   }
 
@@ -390,20 +390,20 @@ int omemo_bundle_get_random_pre_key(omemo_bundle * bundle_p, uint32_t * pre_key_
   for (int i = 0; i < random; i++) {
     next_p = mxmlGetNextSibling(next_p);
     if (!next_p) {
-      ret_val = OMEMO_ERR_MALFORMED_BUNDLE - i;
+      ret_val = OMEMO_ERR_MALFORMED_BUNDLE;
       goto cleanup;
     }
   }
 
   pre_key_id_string = mxmlElementGetAttr(next_p, PRE_KEY_NODE_ID_ATTR_NAME);
   if (!pre_key_id_string) {
-    ret_val = OMEMO_ERR_MALFORMED_BUNDLE - bundle_p->pre_keys_amount;
+    ret_val = OMEMO_ERR_MALFORMED_BUNDLE_NO_PREKEY_ID_ATTR;
     goto cleanup;
   }
 
   b64_string = mxmlGetOpaque(next_p);
   if (!b64_string) {
-    ret_val = OMEMO_ERR_MALFORMED_BUNDLE - bundle_p->pre_keys_amount - 1;
+    ret_val = OMEMO_ERR_MALFORMED_BUNDLE_NO_PREKEY_DATA;
     goto cleanup;
   }
 
@@ -506,13 +506,13 @@ int omemo_bundle_import (const char * received_bundle, omemo_bundle ** bundle_pp
 
   ret_val = strncmp(mxmlGetElement(items_node_p), ITEMS_NODE_NAME, strlen(ITEMS_NODE_NAME));
   if (ret_val) {
-    ret_val = OMEMO_ERR_MALFORMED_XML - 1;
+    ret_val = OMEMO_ERR_MALFORMED_BUNDLE_NO_ITEMS_ELEM;
     goto cleanup;
   }
 
   bundle_node_name = mxmlElementGetAttr(items_node_p, PEP_NODE_NAME);
   if (!bundle_node_name) {
-    ret_val = OMEMO_ERR_MALFORMED_XML - 2;
+    ret_val = OMEMO_ERR_MALFORMED_BUNDLE_NO_NODE_ATTR;
     goto cleanup;
   }
 
@@ -526,19 +526,19 @@ int omemo_bundle_import (const char * received_bundle, omemo_bundle ** bundle_pp
 
   item_node_p = mxmlFindPath(items_node_p, ITEM_NODE_NAME);
   if (!item_node_p) {
-    ret_val = OMEMO_ERR_MALFORMED_XML - 3;
+    ret_val = OMEMO_ERR_MALFORMED_BUNDLE_NO_ITEM_ELEM;
     goto cleanup;
   }
 
   bundle_node_p = mxmlFindPath(item_node_p, BUNDLE_NODE_NAME);
   if (!bundle_node_p) {
-    ret_val = OMEMO_ERR_MALFORMED_XML - 4;
+    ret_val = OMEMO_ERR_MALFORMED_BUNDLE_NO_BUNDLE_ELEM;
     goto cleanup;
   }
 
   signed_pk_node_p = mxmlFindPath(bundle_node_p, SIGNED_PRE_KEY_NODE_NAME);
   if (!signed_pk_node_p) {
-    ret_val = OMEMO_ERR_MALFORMED_XML - 5;
+    ret_val = OMEMO_ERR_MALFORMED_BUNDLE_NO_SPK_ELEM;
     goto cleanup;
   }
   signed_pk_node_p = mxmlGetParent(signed_pk_node_p);
@@ -546,7 +546,7 @@ int omemo_bundle_import (const char * received_bundle, omemo_bundle ** bundle_pp
 
   signature_node_p = mxmlFindPath(bundle_node_p, SIGNATURE_NODE_NAME);
   if (!signature_node_p) {
-    ret_val = OMEMO_ERR_MALFORMED_XML - 6;
+    ret_val = OMEMO_ERR_MALFORMED_BUNDLE_NO_SIG_ELEM;
     goto cleanup;
   }
   signature_node_p = mxmlGetParent(signature_node_p);
@@ -554,7 +554,7 @@ int omemo_bundle_import (const char * received_bundle, omemo_bundle ** bundle_pp
 
   identity_key_node_p = mxmlFindPath(bundle_node_p, IDENTITY_KEY_NODE_NAME);
   if (!identity_key_node_p) {
-    ret_val = OMEMO_ERR_MALFORMED_XML - 7;
+    ret_val = OMEMO_ERR_MALFORMED_BUNDLE_NO_IK_ELEM;
     goto cleanup;
   }
   identity_key_node_p = mxmlGetParent(identity_key_node_p);
@@ -562,14 +562,14 @@ int omemo_bundle_import (const char * received_bundle, omemo_bundle ** bundle_pp
 
   prekeys_node_p = mxmlFindPath(bundle_node_p, PREKEYS_NODE_NAME);
   if (!prekeys_node_p) {
-    ret_val = OMEMO_ERR_MALFORMED_XML - 8;
+    ret_val = OMEMO_ERR_MALFORMED_BUNDLE_NO_PREKEYS_ELEM;
     goto cleanup;
   }
   bundle_p->pre_keys_node_p = prekeys_node_p;
 
   pre_key_node_p = mxmlFindPath(prekeys_node_p, PRE_KEY_NODE_NAME);
   if (!pre_key_node_p) {
-    ret_val = OMEMO_ERR_MALFORMED_XML - 9;
+    ret_val = OMEMO_ERR_MALFORMED_BUNDLE_NO_PREKEY_ELEM;
     goto cleanup;
   }
   pre_key_node_p = mxmlGetParent(pre_key_node_p);
