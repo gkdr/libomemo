@@ -62,7 +62,7 @@ jobs:
         find ROOT/ -not -type d | sort | xargs ls -l
 
     - name: Store coverage HTML report
-      uses: actions/upload-artifact@v2.3.1
+      uses: actions/upload-artifact@v3
       with:
         name: omemo_coverage_shared_${{ matrix.BUILD_SHARED_LIBS }}
         path: build/coverage*.html
