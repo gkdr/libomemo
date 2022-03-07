@@ -700,27 +700,36 @@ int omemo_devicelist_import(char * received_devicelist, const char * from, omemo
   }
 
   items_node_p = mxmlLoadString((void *) 0, received_devicelist, MXML_NO_CALLBACK);
+  if (!items_node_p) {
+    log_err("received devicelist response is invalid XML: %s", err);
+    ret_val = OMEMO_ERR_MALFORMED_XML;
+    goto cleanup;
+  }
+
   ret_val = strncmp(mxmlGetElement(items_node_p), ITEMS_NODE_NAME, strlen(ITEMS_NODE_NAME));
   if (ret_val) {
-    ret_val = OMEMO_ERR_MALFORMED_XML;
+    ret_val = OMEMO_ERR_MALFORMED_XML_DEVICELIST_NO_ITEMS_ELEM;
     goto cleanup;
   }
 
   item_node_p = mxmlGetFirstChild(items_node_p);
   if (!item_node_p) {
+    // valid empty response; no child elements at all
     ret_val = 0;
     *dl_pp = dl_p;
     goto cleanup;
   }
+
   ret_val = strncmp(mxmlGetElement(item_node_p), ITEM_NODE_NAME, strlen(ITEM_NODE_NAME));
   if (ret_val) {
-    ret_val = OMEMO_ERR_MALFORMED_XML - 1;
+    // child of <items> element is not an <item> element
+    ret_val = OMEMO_ERR_MALFORMED_XML_DEVICELIST_NO_ITEM_ELEM;
     goto cleanup;
   }
 
   ret_val = expect_next_node(item_node_p, mxmlGetFirstChild, LIST_NODE_NAME, &list_node_p);
   if (ret_val) {
-    ret_val = OMEMO_ERR_MALFORMED_XML - 2;
+    ret_val = OMEMO_ERR_MALFORMED_XML_DEVICELIST_NO_LIST_ELEM;
     goto cleanup;
   }
 
@@ -730,6 +739,7 @@ int omemo_devicelist_import(char * received_devicelist, const char * from, omemo
 
   ret_val = expect_next_node(list_node_p, mxmlGetFirstChild, DEVICE_NODE_NAME, &device_node_p);
   if (ret_val) {
+    // another variant of valid empty list: a <list> element inside an <item> element, buz with no children
     ret_val = 0;
     *dl_pp = dl_p;
     goto cleanup;
@@ -741,7 +751,8 @@ int omemo_devicelist_import(char * received_devicelist, const char * from, omemo
 
     const char * id_string = mxmlElementGetAttr(device_node_p, DEVICE_NODE_ID_ATTR_NAME);
     if (!id_string) {
-      ret_val = OMEMO_ERR_MALFORMED_XML - 2 - device_count;
+      log_err("device element #%zu does not have an ID attribute", device_count);
+      ret_val = OMEMO_ERR_MALFORMED_XML_DEVICELIST_NO_DEVICE_ID_ATTR;
       goto cleanup;
     }
 
