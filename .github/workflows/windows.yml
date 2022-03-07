@@ -22,7 +22,7 @@ jobs:
         BUILD_SHARED_LIBS: ['ON', 'OFF']
     steps:
 
-    - uses: actions/checkout@v2.4.0
+    - uses: actions/checkout@v3
 
     - name: Install build dependencies
       uses: msys2/setup-msys2@v2
