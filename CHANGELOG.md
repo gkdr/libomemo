@@ -5,12 +5,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [UNRELEASED]
+### Added
+- In some error cases additional information is printed to `stderr` if `LIBOMEMO_DEBUG` is set ([#40](https://github.com/gkdr/libomemo/pull/40))
+
 ### Fixed
 - Fix default prefix to be `/usr/local` rather than `/` ([#38](https://github.com/gkdr/libomemo/pull/38)) (thanks, [@hartwork](https://github.com/hartwork)!)
 - Fix filed `Requires.private` and `Requires` in auto-generated pkg-config file `libomemo.pc` ([#38](https://github.com/gkdr/libomemo/pull/38)) (thanks, [@hartwork](https://github.com/hartwork)!)
 
 ### Changed
 - Migrate build system from a Makefile to CMake ([#38](https://github.com/gkdr/libomemo/pull/38)) (thanks, [@hartwork](https://github.com/hartwork)!)
+- Most XML parsing errors should have a discernible error code now, mostly replacing the more general ones ([#40](https://github.com/gkdr/libomemo/pull/40))
 
 ### Infrastructure
 - Cover Windows build by GitHub Actions CI using msys2 ([#38](https://github.com/gkdr/libomemo/pull/38)) (thanks, [@hartwork](https://github.com/hartwork)!)
