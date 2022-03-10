@@ -62,5 +62,8 @@ You can import received the received XML data to work with it, or create them em
 
 The test cases should demonstrate the general usage.
 
+Many errors have their own specific error code. This is only for debugging purposes and they are not intended to be stable.
+Some error cases which do not have their own error code print a helpful message to `stderr` if the environment variable `LIBOMEMO_DEBUG` exists with any value.  
+
 
 If a different namespace than the one specified in the XEP is to be used, you can use specify it at compile time. See the makefile for an example.
