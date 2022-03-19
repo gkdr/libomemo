@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Infrastructure
 - Cover Windows build by GitHub Actions CI using msys2 ([#38](https://github.com/gkdr/libomemo/pull/38)) (thanks, [@hartwork](https://github.com/hartwork)!)
+- dependabot: update actions/checkout from 2.4.0 to 3.0.0 ([#41](https://github.com/gkdr/libomemo/pull/41))
+- dependabot: update actions/upload-artifact from 2.3.1 to 3.0.0 ([#42](https://github.com/gkdr/libomemo/pull/42))
 
 ## [0.8.0] - 2022-02-14
 ### Added
