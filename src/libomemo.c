@@ -152,13 +152,13 @@ static int expect_next_node(mxml_node_t * node_p, mxml_node_t * (*next_node_func
 }
 
 #define log_err(format, ...) \
-    do { \
-        if (getenv("LIBOMEMO_DEBUG")) { \
-          fprintf(stderr, "libomemo - error in %s: ", __func__); \
-          fprintf(stderr, format, ##__VA_ARGS__); \
-          fprintf(stderr, "\n"); \
-        } \
-    } while(0)
+  do { \
+    if (getenv("LIBOMEMO_DEBUG")) { \
+      fprintf(stderr, "libomemo - error in %s: ", __func__); \
+      fprintf(stderr, format, __VA_ARGS__); \
+      fprintf(stderr, "\n"); \
+    } \
+  } while(0)
 
 int omemo_bundle_create(omemo_bundle ** bundle_pp) {
   omemo_bundle * bundle_p = malloc(sizeof(omemo_bundle));
