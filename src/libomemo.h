@@ -97,6 +97,8 @@ typedef struct omemo_crypto_provider {
 #define OMEMO_ERR_AUTH_FAIL                                       -10020
 #define OMEMO_ERR_UNSUPPORTED_KEY_LEN                             -10030
 #define OMEMO_ERR_STORAGE                                         -10100
+
+// the errors below were initially all equal to the first one
 #define OMEMO_ERR_MALFORMED_BUNDLE                                -11000
 #define OMEMO_ERR_MALFORMED_BUNDLE_NO_ITEMS_ELEM                  -11001
 #define OMEMO_ERR_MALFORMED_BUNDLE_NO_NODE_ATTR                   -11002
@@ -113,6 +115,8 @@ typedef struct omemo_crypto_provider {
 #define OMEMO_ERR_MALFORMED_BUNDLE_NO_PREKEY_ELEM                 -11013
 #define OMEMO_ERR_MALFORMED_BUNDLE_NO_PREKEY_DATA                 -11014
 #define OMEMO_ERR_MALFORMED_BUNDLE_NO_PREKEY_ID_ATTR              -11015
+
+// the errors below were also initially all equal to the first one
 #define OMEMO_ERR_MALFORMED_XML                                   -12000
 #define OMEMO_ERR_MALFORMED_DEVICELIST_NO_ITEMS_ELEM              -12101
 #define OMEMO_ERR_MALFORMED_DEVICELIST_NO_ITEM_ELEM               -12102
