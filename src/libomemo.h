@@ -1,5 +1,5 @@
 /**
- * LIBOMEMO 0.8.0
+ * LIBOMEMO 0.8.1
  */
 
 

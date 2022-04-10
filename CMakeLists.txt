@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.16.3)
 
 project(omemo
     VERSION
-        0.8.0
+        0.8.1
     # NOTE: Because this^^ version affects shared library filenames,
     #       it needs a major version bump to 1.0.0 already at
     #       the _first ever ABI break_ despite semver rule 4
