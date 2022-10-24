@@ -68,7 +68,7 @@ jobs:
         find ROOT/ -not -type d | sort | xargs ls -l
 
     - name: Store Windows binaries
-      uses: actions/upload-artifact@v3.1.0
+      uses: actions/upload-artifact@v3.1.1
       with:
         name: omemo_win32bin_shared_${{ matrix.BUILD_SHARED_LIBS }}
         path: |
