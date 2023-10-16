@@ -856,6 +856,7 @@ int omemo_devicelist_remove(omemo_devicelist * dl_p, uint32_t device_id) {
   for (curr_p = dl_p->id_list_p; curr_p; curr_p = curr_p->next) {
     if (omemo_devicelist_list_data(curr_p) == device_id) {
       remove_id_p = curr_p->data;
+      free(curr_p->data);
       break;
     }
   }
@@ -1611,5 +1612,6 @@ void omemo_message_destroy(omemo_message * msg_p) {
       memset(msg_p->iv_p, 0, msg_p->iv_len);
       free(msg_p->iv_p);
     }
+    free(msg_p);
   }
 }
