@@ -720,6 +720,11 @@ int omemo_devicelist_import(char * received_devicelist, const char * from, omemo
     goto cleanup;
   }
 
+  if (mxmlGetType(item_node_p) != MXML_ELEMENT) {
+    ret_val = OMEMO_ERR_MALFORMED_DEVICELIST_NO_ITEM_ELEM;
+    goto cleanup;
+  }
+
   ret_val = strncmp(mxmlGetElement(item_node_p), ITEM_NODE_NAME, strlen(ITEM_NODE_NAME));
   if (ret_val) {
     // child of <items> element is not an <item> element
