@@ -322,6 +322,8 @@ void test_bundle_set_device_id(void ** state) {
 
   assert_int_equal(omemo_bundle_set_device_id(bundle_p, 1337), 0);
   assert_string_equal(bundle_p->device_id, "1337");
+
+  omemo_bundle_destroy(bundle_p);
 }
 
 void test_bundle_set_signed_pre_key(void ** state) {
@@ -479,7 +481,9 @@ void test_bundle_export(void ** state) {
   assert_string_equal(mxmlGetElement(pre_key_node_p), "preKeyPublic");
   assert_string_equal(mxmlElementGetAttr(pre_key_node_p, "preKeyId"), "20");
 
-   mxmlDelete(publish_node_p);
+  free(publish);
+  mxmlDelete(publish_node_p);
+  omemo_bundle_destroy(bundle_p);
 }
 
 void test_bundle_get_pep_node_name(void ** state) {
@@ -840,6 +844,8 @@ void test_message_is_encrypted_key_prekey(void ** state) {
 
   assert_int_equal(omemo_message_is_encrypted_key_prekey(msg_p, 9999, &is_prekey), 0);
   assert_int_equal(is_prekey, false);
+
+  omemo_message_destroy(msg_p);
 }
 
 void test_message_get_encrypted_key_after_iv(void ** state) {

@@ -720,6 +720,11 @@ int omemo_devicelist_import(char * received_devicelist, const char * from, omemo
     goto cleanup;
   }
 
+  if (mxmlGetType(item_node_p) != MXML_ELEMENT) {
+    ret_val = OMEMO_ERR_MALFORMED_DEVICELIST_NO_ITEM_ELEM;
+    goto cleanup;
+  }
+
   ret_val = strncmp(mxmlGetElement(item_node_p), ITEM_NODE_NAME, strlen(ITEM_NODE_NAME));
   if (ret_val) {
     // child of <items> element is not an <item> element
@@ -803,6 +808,7 @@ int omemo_devicelist_add(omemo_devicelist * dl_p, uint32_t device_id) {
   mxmlAdd(dl_p->list_node_p, MXML_ADD_AFTER, MXML_ADD_TO_PARENT, device_node_p);
   dl_p->id_list_p = g_list_append(dl_p->id_list_p, id_p);
 
+  free(id_string);
   return 0;
 }
 
@@ -850,6 +856,7 @@ int omemo_devicelist_remove(omemo_devicelist * dl_p, uint32_t device_id) {
   for (curr_p = dl_p->id_list_p; curr_p; curr_p = curr_p->next) {
     if (omemo_devicelist_list_data(curr_p) == device_id) {
       remove_id_p = curr_p->data;
+      free(curr_p->data);
       break;
     }
   }
@@ -1423,7 +1430,7 @@ static int omemo_message_find_key_element(omemo_message * msg_p, uint32_t rid, m
     }
   }
 
-  
+
 cleanup:
   free(rid_string);
 
@@ -1459,7 +1466,7 @@ int omemo_message_get_encrypted_key(omemo_message * msg_p, uint32_t own_device_i
 cleanup:
   *key_pp = key_p;
   *key_len_p = key_len;
-  
+
   return ret_val;
 }
 
@@ -1605,5 +1612,6 @@ void omemo_message_destroy(omemo_message * msg_p) {
       memset(msg_p->iv_p, 0, msg_p->iv_len);
       free(msg_p->iv_p);
     }
+    free(msg_p);
   }
 }
