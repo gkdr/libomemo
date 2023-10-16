@@ -808,6 +808,7 @@ int omemo_devicelist_add(omemo_devicelist * dl_p, uint32_t device_id) {
   mxmlAdd(dl_p->list_node_p, MXML_ADD_AFTER, MXML_ADD_TO_PARENT, device_node_p);
   dl_p->id_list_p = g_list_append(dl_p->id_list_p, id_p);
 
+  free(id_string);
   return 0;
 }
 
@@ -1428,7 +1429,7 @@ static int omemo_message_find_key_element(omemo_message * msg_p, uint32_t rid, m
     }
   }
 
-  
+
 cleanup:
   free(rid_string);
 
@@ -1464,7 +1465,7 @@ int omemo_message_get_encrypted_key(omemo_message * msg_p, uint32_t own_device_i
 cleanup:
   *key_pp = key_p;
   *key_len_p = key_len;
-  
+
   return ret_val;
 }
 
