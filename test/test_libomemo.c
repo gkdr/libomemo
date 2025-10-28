@@ -8,25 +8,25 @@
 
 char * devicelist = "<items node='eu.siacs.conversations.axolotl.devicelist'>"
                               "<item>"
-                                "<list xmlns='eu.siacs.conversations.axolotl'>"
-                                   "<device id='4223' />"
-                                   "<device id='1337' />"
+                                "<list xmlns='eu.siacs.conversations.axolotl'>\n"
+                                   "  <device id='4223' />"
+                                   "<device id='1337' />\n"
                                 "</list>"
                               "</item>"
                             "</items>";
 
 char * bundle = "<items node='eu.siacs.conversations.axolotl.bundles:31415'>"
                   "<item>"
-                    "<bundle xmlns='eu.siacs.conversations.axolotl'>"
-                      "<signedPreKeyPublic signedPreKeyId='1'>sWsAtQ==</signedPreKeyPublic>"
-                      "<signedPreKeySignature>sWsAtQ==</signedPreKeySignature>"
-                      "<identityKey>sWsAtQ==</identityKey>"
-                      "<prekeys>"
+                    "<bundle xmlns='eu.siacs.conversations.axolotl'>\n"
+                      "<signedPreKeyPublic signedPreKeyId='1'>sWsAtQ==</signedPreKeyPublic>\n"
+                      "<signedPreKeySignature>sWsAtQ==</signedPreKeySignature>\n"
+                      "<identityKey>sWsAtQ==</identityKey>\n"
+                      "<prekeys>\n"
                         "<preKeyPublic preKeyId='10'>sWsAtQ==</preKeyPublic>"
-                        "<preKeyPublic preKeyId='20'>sWsAtQ==</preKeyPublic>"
+                        "<preKeyPublic preKeyId='20'>sWsAtQ==</preKeyPublic>\n"
                         "<preKeyPublic preKeyId='30'>sWsAtQ==</preKeyPublic>"
-                        "<preKeyPublic preKeyId='40'>sWsAtQ==</preKeyPublic>"
-                      "</prekeys>"
+                        "<preKeyPublic preKeyId='40'>sWsAtQ==</preKeyPublic>\n"
+                      "</prekeys>\n"
                      "</bundle>"
                     "</item>"
                   "</items>";
@@ -248,7 +248,9 @@ void test_devicelist_export(void ** state) {
   char * xml;
   assert_int_equal(omemo_devicelist_export(dl_p, &xml), 0);
 
-  mxml_node_t * publish_node_p = mxmlLoadString((void *) 0, xml, MXML_NO_CALLBACK);
+  mxml_options_t * options = mxmlOptionsNew();
+  mxml_node_t * publish_node_p = mxmlLoadString((void *) 0, options, xml);
+  mxmlOptionsDelete(options);
   assert_ptr_not_equal(publish_node_p, (void *) 0);
   assert_string_equal(mxmlGetElement(publish_node_p), "publish");
   assert_string_equal(mxmlElementGetAttr(publish_node_p, "node"), "eu.siacs.conversations.axolotl.devicelist");
@@ -440,7 +442,10 @@ void test_bundle_export(void ** state) {
   assert_int_equal(omemo_bundle_export(bundle_p, &publish), 0);
   assert_ptr_not_equal(publish, (void *) 0);
 
-  mxml_node_t * publish_node_p = mxmlLoadString((void *) 0, publish, MXML_OPAQUE_CALLBACK);
+  mxml_options_t * options = mxmlOptionsNew();
+  mxmlOptionsSetTypeValue(options, MXML_TYPE_OPAQUE);
+  mxml_node_t * publish_node_p = mxmlLoadString((void *) 0, options, publish);
+  mxmlOptionsDelete(options);
   assert_ptr_not_equal(publish_node_p, (void *) 0);
 
   mxml_node_t * item_node_p = mxmlGetFirstChild(publish_node_p);
@@ -965,7 +970,10 @@ void test_message_export_encrypted(void ** state) {
   char * xml;
   assert_int_equal(omemo_message_export_encrypted(msg_p, OMEMO_ADD_MSG_NONE, &xml), 0);
 
-  mxml_node_t * message_node_p = mxmlLoadString((void *) 0, xml, MXML_OPAQUE_CALLBACK);
+  mxml_options_t * options = mxmlOptionsNew();
+  mxmlOptionsSetTypeValue(options, MXML_TYPE_OPAQUE);
+  mxml_node_t * message_node_p = mxmlLoadString((void *) 0, options, xml);
+  mxmlOptionsDelete(options);
   assert_ptr_not_equal(message_node_p, (void *) 0);
   assert_string_equal(mxmlGetElement(message_node_p), "message");
 
@@ -1002,7 +1010,10 @@ void test_message_export_encrypted_with_extra_tags_and_body(void ** state) {
   char * xml;
   assert_int_equal(omemo_message_export_encrypted(msg_p, OMEMO_ADD_MSG_BODY, &xml), 0);
 
-  mxml_node_t * message_node_p = mxmlLoadString((void *) 0, xml, MXML_OPAQUE_CALLBACK);
+  mxml_options_t * options = mxmlOptionsNew();
+  mxmlOptionsSetTypeValue(options, MXML_TYPE_OPAQUE);
+  mxml_node_t * message_node_p = mxmlLoadString((void *) 0, options, xml);
+  mxmlOptionsDelete(options);
   assert_ptr_not_equal(message_node_p, (void *) 0);
   assert_string_equal(mxmlGetElement(message_node_p), "message");
 
@@ -1057,7 +1068,10 @@ void test_message_export_encrypted_strip_xhtml(void ** state) {
   char * xml;
   assert_int_equal(omemo_message_export_encrypted(msg_p, OMEMO_ADD_MSG_BODY, &xml), 0);
 
-  mxml_node_t * message_node_p = mxmlLoadString((void *) 0, xml, MXML_OPAQUE_CALLBACK);
+  mxml_options_t * options = mxmlOptionsNew();
+  mxmlOptionsSetTypeValue(options, MXML_TYPE_OPAQUE);
+  mxml_node_t * message_node_p = mxmlLoadString((void *) 0, options, xml);
+  mxmlOptionsDelete(options);
   assert_ptr_not_equal(message_node_p, (void *) 0);
   assert_string_equal(mxmlGetElement(message_node_p), "message");
 
@@ -1090,7 +1104,10 @@ void test_message_export_encrypted_strip_multiple_body(void ** state) {
   char * xml;
   assert_int_equal(omemo_message_export_encrypted(msg_p, OMEMO_ADD_MSG_NONE, &xml), 0);
 
-  mxml_node_t * message_node_p = mxmlLoadString((void *) 0, xml, MXML_OPAQUE_CALLBACK);
+  mxml_options_t * options = mxmlOptionsNew();
+  mxmlOptionsSetTypeValue(options, MXML_TYPE_OPAQUE);
+  mxml_node_t * message_node_p = mxmlLoadString((void *) 0, options, xml);
+  mxmlOptionsDelete(options);
   assert_ptr_not_equal(message_node_p, (void *) 0);
   assert_string_equal(mxmlGetElement(message_node_p), "message");
 
@@ -1130,7 +1147,10 @@ void test_message_export_encrypted_strip_xhtml_and_body(void ** state) {
   char * xml;
   assert_int_equal(omemo_message_export_encrypted(msg_p, OMEMO_ADD_MSG_NONE, &xml), 0);
 
-  mxml_node_t * message_node_p = mxmlLoadString((void *) 0, xml, MXML_OPAQUE_CALLBACK);
+  mxml_options_t * options = mxmlOptionsNew();
+  mxmlOptionsSetTypeValue(options, MXML_TYPE_OPAQUE);
+  mxml_node_t * message_node_p = mxmlLoadString((void *) 0, options, xml);
+  mxmlOptionsDelete(options);
   assert_ptr_not_equal(message_node_p, (void *) 0);
   assert_string_equal(mxmlGetElement(message_node_p), "message");
 
@@ -1158,7 +1178,10 @@ void test_message_export_encrypted_with_eme(void ** state) {
   char * xml;
   assert_int_equal(omemo_message_export_encrypted(msg_p, OMEMO_ADD_MSG_EME, &xml), 0);
 
-  mxml_node_t * message_node_p = mxmlLoadString((void *) 0, xml, MXML_OPAQUE_CALLBACK);
+  mxml_options_t * options = mxmlOptionsNew();
+  mxmlOptionsSetTypeValue(options, MXML_TYPE_OPAQUE);
+  mxml_node_t * message_node_p = mxmlLoadString((void *) 0, options, xml);
+  mxmlOptionsDelete(options);
   assert_ptr_not_equal(message_node_p, (void *) 0);
   assert_string_equal(mxmlGetElement(message_node_p), "message");
 
@@ -1228,7 +1251,10 @@ void test_message_encrypt_decrypt(void ** state) {
 
   char * xml_in;
   assert_int_equal(omemo_message_export_decrypted(msg_in_p, key_retrieved_p, key_retrieved_len, &crypto, &xml_in), 0);
-  mxml_node_t * message_node_decrypted_p = mxmlLoadString((void *) 0, xml_in, MXML_OPAQUE_CALLBACK);
+  mxml_options_t * options = mxmlOptionsNew();
+  mxmlOptionsSetTypeValue(options, MXML_TYPE_OPAQUE);
+  mxml_node_t * message_node_decrypted_p = mxmlLoadString((void *) 0, options, xml_in);
+  mxmlOptionsDelete(options);
   assert_ptr_not_equal(message_node_decrypted_p, (void *) 0);
   mxml_node_t * body_text_node_p = mxmlFindPath(message_node_decrypted_p, "body");
   assert_string_equal(mxmlGetOpaque(body_text_node_p), "hello");
@@ -1283,7 +1309,10 @@ void test_message_encrypt_decrypt_with_extra_nodes(void ** state) {
 
   char * xml_in;
   assert_int_equal(omemo_message_export_decrypted(msg_in_p, key_retrieved_p, key_retrieved_len, &crypto, &xml_in), 0);
-  mxml_node_t * message_node_decrypted_p = mxmlLoadString((void *) 0, xml_in, MXML_OPAQUE_CALLBACK);
+  mxml_options_t * options = mxmlOptionsNew();
+  mxmlOptionsSetTypeValue(options, MXML_TYPE_OPAQUE);
+  mxml_node_t * message_node_decrypted_p = mxmlLoadString((void *) 0, options, xml_in);
+  mxmlOptionsDelete(options);
   assert_ptr_not_equal(message_node_decrypted_p, (void *) 0);
   mxml_node_t * body_text_node_p = mxmlFindPath(message_node_decrypted_p, "body");
   assert_string_equal(mxmlGetOpaque(body_text_node_p), "hello");
@@ -1324,7 +1353,10 @@ void test_message_encrypt_decrypt_with_added_body(void ** state) {
 
   char * xml_in;
   assert_int_equal(omemo_message_export_decrypted(msg_in_p, key_retrieved_p, key_retrieved_len, &crypto, &xml_in), 0);
-  mxml_node_t * message_node_decrypted_p = mxmlLoadString((void *) 0, xml_in, MXML_OPAQUE_CALLBACK);
+  mxml_options_t * options = mxmlOptionsNew();
+  mxmlOptionsSetTypeValue(options, MXML_TYPE_OPAQUE);
+  mxml_node_t * message_node_decrypted_p = mxmlLoadString((void *) 0, options, xml_in);
+  mxmlOptionsDelete(options);
   assert_ptr_not_equal(message_node_decrypted_p, (void *) 0);
   mxml_node_t * body_text_node_p = mxmlFindPath(message_node_decrypted_p, "body");
   assert_string_equal(mxmlGetOpaque(body_text_node_p), "hello");
@@ -1365,7 +1397,10 @@ void test_message_encrypt_decrypt_with_added_eme(void ** state) {
 
   char * xml_in;
   assert_int_equal(omemo_message_export_decrypted(msg_in_p, key_retrieved_p, key_retrieved_len, &crypto, &xml_in), 0);
-  mxml_node_t * message_node_decrypted_p = mxmlLoadString((void *) 0, xml_in, MXML_OPAQUE_CALLBACK);
+  mxml_options_t * options = mxmlOptionsNew();
+  mxmlOptionsSetTypeValue(options, MXML_TYPE_OPAQUE);
+  mxml_node_t * message_node_decrypted_p = mxmlLoadString((void *) 0, options, xml_in);
+  mxmlOptionsDelete(options);
   assert_ptr_not_equal(message_node_decrypted_p, (void *) 0);
   mxml_node_t * body_text_node_p = mxmlFindPath(message_node_decrypted_p, "body");
   assert_string_equal(mxmlGetOpaque(body_text_node_p), "hello");

@@ -79,7 +79,7 @@ if(OMEMO_WITH_TESTS)
 endif()
 pkg_check_modules(GLIB REQUIRED "glib-2.0")
 pkg_check_modules(GCRYPT REQUIRED "libgcrypt")
-pkg_check_modules(MXML REQUIRED "mxml")
+pkg_check_modules(MXML4 REQUIRED "mxml4")
 pkg_check_modules(SQLITE REQUIRED "sqlite3")
 
 
@@ -168,8 +168,8 @@ foreach(_target omemo ${_OMEMO_TEST_TARGETS})
 
         # TODO: Tests should stop depending on mxml
         #       once the tests stop including libomemo's .c(!) files
-        target_compile_options(${_target} PRIVATE ${MXML_CFLAGS})
-        target_link_libraries(${_target} PRIVATE ${MXML_LIBRARIES})
+        target_compile_options(${_target} PRIVATE ${MXML4_CFLAGS})
+        target_link_libraries(${_target} PRIVATE ${MXML4_LIBRARIES})
 
         target_compile_options(${_target} PRIVATE ${SQLITE_CFLAGS})
         target_link_libraries(${_target} PRIVATE ${SQLITE_LIBRARIES})
@@ -184,8 +184,8 @@ foreach(_target omemo ${_OMEMO_TEST_TARGETS})
 
         # TODO: Tests should stop depending on mxml
         #       once the tests stop including libomemo's .c(!) files
-        target_compile_options(${_target} PRIVATE ${MXML_STATIC_CFLAGS})
-        target_link_libraries(${_target} PRIVATE ${MXML_STATIC_LIBRARIES})
+        target_compile_options(${_target} PRIVATE ${MXML4_STATIC_CFLAGS})
+        target_link_libraries(${_target} PRIVATE ${MXML4_STATIC_LIBRARIES})
 
         target_compile_options(${_target} PRIVATE ${SQLITE_STATIC_CFLAGS})
         target_link_libraries(${_target} PRIVATE ${SQLITE_STATIC_LIBRARIES})
