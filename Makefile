@@ -8,7 +8,8 @@ MKDIR_P = mkdir -p
 
 ARCH = $(shell $(CC) -print-multiarch)
 VER_MAJ = 0
-VERSION = 0.8.0
+VERSION = 0.8.1
+PREFIX ?= /usr/local
 
 PKG_CONFIG ?= pkg-config
 GLIB_CFLAGS ?= $(shell $(PKG_CONFIG) --cflags glib-2.0)
@@ -98,7 +99,8 @@ $(BDIR)/libomemo.pc: $(BDIR)
 	echo 'Name: libomemo' >> $@
 	echo 'Version: ${VERSION}' >> $@
 	echo 'Description: OMEMO library for C' >> $@
-	echo 'Requires.private: glib-2.0' >> $@
+	echo 'Requires: glib-2.0' >> $@
+	echo 'Requires.private: libgcrypt mxml sqlite3' >> $@
 	echo 'Cflags: -I$${includedir}/libomemo' >> $@
 	echo 'Libs: -L$${libdir} -lomemo' >> $@
 
