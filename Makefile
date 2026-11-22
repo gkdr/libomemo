@@ -8,7 +8,7 @@ MKDIR_P = mkdir -p
 
 ARCH = $(shell $(CC) -print-multiarch)
 VER_MAJ = 0
-VERSION = 0.8.1
+VERSION = 0.8.2
 PREFIX ?= /usr/local
 
 PKG_CONFIG ?= pkg-config
