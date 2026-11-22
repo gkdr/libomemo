@@ -64,6 +64,7 @@ void test_devicelist_retrieve(void ** state) {
   (void) state;
 
   omemo_devicelist * dl_p;
+  GList * id_list_p;
 
   assert_int_equal(omemo_storage_user_devicelist_retrieve("alice", TEST_DB_PATH, &dl_p), 0);
   assert_ptr_not_equal(dl_p, (void *) 0);
@@ -74,16 +75,20 @@ void test_devicelist_retrieve(void ** state) {
   assert_int_equal(omemo_storage_user_devicelist_retrieve("alice", TEST_DB_PATH, &dl_p), 0);
 
   assert_ptr_not_equal(dl_p, (void *) 0);
-  assert_int_equal(omemo_devicelist_list_data(omemo_devicelist_get_id_list(dl_p)), 1337);
-  assert_ptr_equal((omemo_devicelist_get_id_list(dl_p))->next, (void *) 0);
+  id_list_p = omemo_devicelist_get_id_list(dl_p);
+  assert_int_equal(omemo_devicelist_list_data(id_list_p), 1337);
+  assert_ptr_equal(id_list_p->next, (void *) 0);
+  g_list_free_full(id_list_p, free);
   omemo_devicelist_destroy(dl_p);
 
   assert_int_equal(omemo_storage_user_device_id_save("alice", 1338, TEST_DB_PATH), 0);
   assert_int_equal(omemo_storage_user_devicelist_retrieve("alice", TEST_DB_PATH, &dl_p), 0);
   assert_ptr_not_equal(dl_p, (void *) 0);
-  assert_int_equal(omemo_devicelist_list_data(omemo_devicelist_get_id_list(dl_p)), 1337);
-  assert_int_equal(omemo_devicelist_list_data(omemo_devicelist_get_id_list(dl_p)), 1337);
-  assert_int_equal(omemo_devicelist_list_data(omemo_devicelist_get_id_list(dl_p)->next), 1338);
+  id_list_p = omemo_devicelist_get_id_list(dl_p);
+  assert_int_equal(omemo_devicelist_list_data(id_list_p), 1337);
+  assert_int_equal(omemo_devicelist_list_data(id_list_p), 1337);
+  assert_int_equal(omemo_devicelist_list_data(id_list_p->next), 1338);
+  g_list_free_full(id_list_p, free);
 
   omemo_devicelist_destroy(dl_p);
 }
