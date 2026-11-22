@@ -11,12 +11,8 @@ on:
 
 jobs:
   checks:
-    name: Build for Linux (shared=${{ matrix.BUILD_SHARED_LIBS }})
+    name: Build for Linux
     runs-on: ubuntu-20.04
-    strategy:
-      fail-fast: false
-      matrix:
-        BUILD_SHARED_LIBS: ['ON', 'OFF']
     steps:
 
     - uses: actions/checkout@v3.0.2
@@ -31,39 +27,26 @@ jobs:
             libgcrypt20-dev \
             libglib2.0-dev \
             libmxml-dev \
-            libsqlite3-dev \
-            ninja-build
-
-    - name: Configure
-      run: |-
-        set -x
-        cmake \
-          -B build \
-          -G Ninja \
-          -DBUILD_SHARED_LIBS=${{ matrix.BUILD_SHARED_LIBS }} \
-          -D_OMEMO_WITH_COVERAGE=ON
+            libsqlite3-dev
 
     - name: Build
       run: |-
         set -x
-        ninja -v -C build all
-        cat build/libomemo.pc
+        make -j $(nproc) all
 
     - name: Test
       run: |-
-        set -x
-        CTEST_OUTPUT_ON_FAILURE=1 ninja -C build test
-        ninja -C build coverage
+        make coverage  # includes tests
 
     - name: Install
       run: |-
         set -x -o pipefail
-        DESTDIR="${PWD}"/ROOT ninja -v -C build install
+        make DESTDIR="${PWD}"/ROOT install
         find ROOT/ -not -type d | sort | xargs ls -l
 
     - name: Store coverage HTML report
       uses: actions/upload-artifact@v3.1.0
       with:
-        name: omemo_coverage_shared_${{ matrix.BUILD_SHARED_LIBS }}
-        path: build/coverage*.html
+        name: coverage
+        path: coverage/
         if-no-files-found: error
