@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - The Makefile now defaults to the prefix `/usr/local` and writes the `Requires` of `libomemo.pc` like the CMake build did.
+- The devicelist is now published with the pubsub item ID of "current", matching the XEP recommendation.
+  This fixes a bug where, on servers keeping more than one item, devices using this library could end up on their own devicelist with a random item ID and not be visible to other clients only checking `current`.
 
 ### Infrastructure
 - Remove the Windows build from the GitHub Actions CI. It came with the CMake build.

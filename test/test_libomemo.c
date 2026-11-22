@@ -255,6 +255,7 @@ void test_devicelist_export(void ** state) {
 
   mxml_node_t * item_node_p = mxmlGetFirstChild(publish_node_p);
   assert_string_equal(mxmlGetElement(item_node_p), "item");
+  assert_string_equal(mxmlElementGetAttr(item_node_p, "id"), "current");
 
   mxml_node_t * list_node_p = mxmlGetFirstChild(item_node_p);
   assert_string_equal(mxmlGetElement(list_node_p), "list");

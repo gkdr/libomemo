@@ -55,6 +55,8 @@
 #define SIGNED_PRE_KEY_NODE_ID_ATTR_NAME "signedPreKeyId"
 #define PRE_KEY_NODE_ID_ATTR_NAME "preKeyId"
 #define DEVICE_NODE_ID_ATTR_NAME "id"
+#define ITEM_NODE_ID_ATTR_NAME "id"
+#define ITEM_NODE_ID_ATTR_VAL_CURRENT "current"
 
 #define OMEMO_DB_DEFAULT_FN "omemo.sqlite"
 
@@ -920,6 +922,7 @@ int omemo_devicelist_export(omemo_devicelist * dl_p, char ** xml_p) {
   mxmlElementSetAttr(publish_node_p, PUBLISH_NODE_NODE_ATTR_NAME, OMEMO_DEVICELIST_PEP_NODE);
 
   mxml_node_t * item_node_p = mxmlNewElement(publish_node_p, ITEM_NODE_NAME);
+  mxmlElementSetAttr(item_node_p, ITEM_NODE_ID_ATTR_NAME, ITEM_NODE_ID_ATTR_VAL_CURRENT);
   mxmlAdd(item_node_p, MXML_ADD_AFTER, MXML_ADD_TO_PARENT, dl_p->list_node_p);
 
   char * xml = mxmlSaveAllocString(publish_node_p, MXML_NO_CALLBACK);
