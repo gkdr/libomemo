@@ -465,6 +465,7 @@ int omemo_bundle_export(omemo_bundle * bundle_p, char ** publish) {
   mxmlElementSetAttr(publish_node_p, PUBLISH_NODE_NODE_ATTR_NAME, node_value);
 
   item_node_p = mxmlNewElement(publish_node_p, ITEM_NODE_NAME);
+  mxmlElementSetAttr(item_node_p, ITEM_NODE_ID_ATTR_NAME, ITEM_NODE_ID_ATTR_VAL_CURRENT);
 
   bundle_node_p = mxmlNewElement(item_node_p, BUNDLE_NODE_NAME);
   mxmlElementSetAttr(bundle_node_p, "xmlns", OMEMO_NS);
